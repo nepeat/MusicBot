@@ -10,8 +10,8 @@ from random import shuffle
 from itertools import islice
 from collections import deque
 
-from .exceptions import ExtractionError, WrongEntryTypeError
-from .lib.event_emitter import EventEmitter
+from musicbot.exceptions import ExtractionError, WrongEntryTypeError
+from musicbot.lib.event_emitter import EventEmitter
 
 
 class Playlist(EventEmitter):

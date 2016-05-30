@@ -8,7 +8,7 @@ from array import array
 from collections import deque
 from shutil import get_terminal_size
 
-from .lib.event_emitter import EventEmitter
+from musicbot.lib.event_emitter import EventEmitter
 
 
 class PatchedBuff:
@@ -277,16 +277,11 @@ class MusicPlayer(EventEmitter):
             self._current_player._connected.set()
 
     async def websocket_check(self):
-        if self.bot.config.debug_mode:
-            print("[Debug] Creating websocket check loop")
-
         while not self.is_dead:
             try:
                 self.voice_client.ws.ensure_open()
                 assert self.voice_client.ws.open
             except:
-                if self.bot.config.debug_mode:
-                    print("[Debug] Voice websocket is %s, reconnecting" % self.voice_client.ws.state_name)
                 await self.bot.reconnect_voice_client(self.voice_client.channel.server)
                 await asyncio.sleep(4)
             finally:

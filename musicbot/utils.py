@@ -1,10 +1,6 @@
-import re
 import decimal
-import unicodedata
 
-from .constants import DISCORD_MSG_CHAR_LIMIT
-
-_USER_ID_MATCH = re.compile(r'<@(\d+)>')
+from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
 
 
 def load_file(filename, skip_commented_lines=True, comment_char='#'):
@@ -29,18 +25,6 @@ def write_file(filename, contents):
         for item in contents:
             f.write(str(item))
             f.write('\n')
-
-
-def extract_user_id(argument):
-    match = _USER_ID_MATCH.match(argument)
-    if match:
-        return int(match.group(1))
-
-
-def slugify(value):
-    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
-    value = re.sub('[^\w\s-]', '', value).strip().lower()
-    return re.sub('[-\s]+', '-', value)
 
 
 def sane_round_int(x):

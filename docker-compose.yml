@@ -1,0 +1,4 @@
+musicbot:
+    build: .
+    volumes:
+      - musicbotconfig:/app/config

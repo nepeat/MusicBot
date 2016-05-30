@@ -1,6 +1,7 @@
 .idea/
 *.pyc
 ~*/
+.git/
 
 audio_cache/
 dectalk/
@@ -8,3 +9,7 @@ dectalk/
 discord.log
 config/options.ini
 config/permissions.ini
+
+*.exe
+*.dll
+*.bat

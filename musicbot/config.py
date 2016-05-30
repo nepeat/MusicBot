@@ -1,9 +1,8 @@
 import os
 import shutil
-import traceback
 import configparser
 
-from .exceptions import HelpfulError
+from musicbot.exceptions import HelpfulError
 
 
 class Config:
@@ -56,8 +55,6 @@ class Config:
                 preface="An error has occured parsing the config:\n"
             )
 
-        self._email = config.get('Credentials', 'Email', fallback=ConfigDefaults.email)
-        self._password = config.get('Credentials', 'Password', fallback=ConfigDefaults.password)
         self._login_token = config.get('Credentials', 'Token', fallback=ConfigDefaults.token)
 
         self.auth = None
@@ -65,7 +62,7 @@ class Config:
         self.owner_id = config.get('Permissions', 'OwnerID', fallback=ConfigDefaults.owner_id)
         self.command_prefix = config.get('Chat', 'CommandPrefix', fallback=ConfigDefaults.command_prefix)
         self.bound_channels = config.get('Chat', 'BindToChannels', fallback=ConfigDefaults.bound_channels)
-        self.autojoin_channels =  config.get('Chat', 'AutojoinChannels', fallback=ConfigDefaults.autojoin_channels)
+        self.autojoin_channels = config.get('Chat', 'AutojoinChannels', fallback=ConfigDefaults.autojoin_channels)
 
         self.default_volume = config.getfloat('MusicBot', 'DefaultVolume', fallback=ConfigDefaults.default_volume)
         self.skips_required = config.getint('MusicBot', 'SkipsRequired', fallback=ConfigDefaults.skips_required)
@@ -77,7 +74,6 @@ class Config:
         self.auto_pause = config.getboolean('MusicBot', 'AutoPause', fallback=ConfigDefaults.auto_pause)
         self.delete_messages  = config.getboolean('MusicBot', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
         self.delete_invoking = config.getboolean('MusicBot', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
-        self.debug_mode = config.getboolean('MusicBot', 'DebugMode', fallback=ConfigDefaults.debug_mode)
 
         self.blacklist_file = config.get('Files', 'BlacklistFile', fallback=ConfigDefaults.blacklist_file)
         self.auto_playlist_file = config.get('Files', 'AutoPlaylistFile', fallback=ConfigDefaults.auto_playlist_file)
@@ -91,30 +87,10 @@ class Config:
         """
         confpreface = "An error has occured reading the config:\n"
 
-        if self._email or self._password:
-            if not self._email:
-                raise HelpfulError(
-                    "The login email was not specified in the config.",
-
-                    "Please put your bot account credentials in the config.  "
-                    "Remember that the Email is the email address used to register the bot account.",
-                    preface=confpreface)
-
-            if not self._password:
-                raise HelpfulError(
-                    "The password was not specified in the config.",
-
-                    "Please put your bot account credentials in the config.",
-                    preface=confpreface)
-
-            self.auth = (self._email, self._password)
-
-        elif not self._login_token:
+        if not self._login_token:
             raise HelpfulError(
                 "No login credentials were specified in the config.",
-
-                "Please fill in either the Email and Password fields, or "
-                "the Token field.  The Token field is for Bot accounts only.",
+                "Please fill in the Token field",
                 preface=confpreface
             )
 
@@ -167,8 +143,6 @@ class Config:
 
 
 class ConfigDefaults:
-    email = None    #
-    password = None # This is not where you put your login info, go away.
     token = None    #
 
     owner_id = None
@@ -186,7 +160,6 @@ class ConfigDefaults:
     auto_pause = True
     delete_messages = True
     delete_invoking = False
-    debug_mode = False
 
     options_file = 'config/options.ini'
     blacklist_file = 'config/blacklist.txt'
