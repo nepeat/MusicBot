@@ -10,4 +10,7 @@ def command(name):
         return f
     return decorate
 
-from musicbot.commands import *
+import musicbot.commands.meta
+import musicbot.commands.moderation
+import musicbot.commands.music
+import musicbot.commands.server
