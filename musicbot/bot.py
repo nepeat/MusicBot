@@ -21,7 +21,7 @@ from musicbot.constants import AUDIO_CACHE_PATH
 from musicbot.permissions import Permissions, PermissionsDefaults
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
-from musicbot.util import config
+from musicbot.utils import config
 
 # Logging
 logging.basicConfig(level=logging.INFO)
