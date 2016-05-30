@@ -11,8 +11,7 @@ from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
 from musicbot.exceptions import (CommandError, PermissionsError,
                                  WrongEntryTypeError)
 from musicbot.structures import Response
-from musicbot.utils import sane_round_int
-from musicbot.util import config
+import musicbot.utils
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ async def cmd_blacklist(self, message, user_mentions, option, something):
     if option in ['+', 'add']:
         self.blacklist.update(user.id for user in user_mentions)
 
-        config.write(self.config.blacklist_file, self.blacklist)
+        musicbot.utils.config.write(self.config.blacklist_file, self.blacklist)
 
         return Response(
             '%s users have been added to the blacklist' % (len(self.blacklist) - old_len),
@@ -58,7 +57,7 @@ async def cmd_blacklist(self, message, user_mentions, option, something):
 
         else:
             self.blacklist.difference_update(user.id for user in user_mentions)
-            config.write(self.config.blacklist_file, self.blacklist)
+            musicbot.utils.config.write(self.config.blacklist_file, self.blacklist)
 
             return Response(
                 '%s users have been removed from the blacklist' % (old_len - len(self.blacklist)),
@@ -605,8 +604,10 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
 
     num_skips = player.skip_state.add_skipper(author.id, message)
 
-    skips_remaining = min(self.config.skips_required,
-                          sane_round_int(num_voice * self.config.skip_ratio_required)) - num_skips
+    skips_remaining = min(
+        self.config.skips_required,
+        musicbot.utils.math.sane_round_int(num_voice * self.config.skip_ratio_required)
+    ) - num_skips
 
     if skips_remaining <= 0:
         player.skip()  # check autopause stuff here
