@@ -13,7 +13,7 @@ def owner_only(func):
         # Only allow the owner to use these commands
         orig_msg = self._get_variable('message')
 
-        if not orig_msg or orig_msg.author.id in self.config.owners:
+        if not orig_msg or orig_msg.author.id == self.config.owner_id:
             return await func(self, *args, **kwargs)
         else:
             raise PermissionsError("Only the bot admin can use this command.", expire_in=30)
