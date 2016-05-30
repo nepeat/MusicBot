@@ -39,23 +39,26 @@ async def cmd_help(self, command=None):
 
     if command:
         cmd = all_commands.get(command, None)
-        if cmd:
-            return Response(
-                "```\n{}```".format(
-                    dedent(cmd.__doc__),
-                    command_prefix=self.config.command_prefix
-                ),
-                delete_after=60
-            )
-        else:
+
+        if not cmd:
             return Response("No such command", delete_after=10)
+
+        return Response(
+            "```\n{}```".format(
+                dedent(cmd.__doc__),
+                command_prefix=self.config.command_prefix
+            ),
+            delete_after=60
+        )
 
     else:
         commands = []
 
         for cmd in all_commands:
-            if cmd != 'help':
-                commands.append("{}{}".format(self.config.command_prefix, cmd))
+            if cmd == 'help':
+                continue
+
+            commands.append("{}{}".format(self.config.command_prefix, cmd))
 
         helpmsg = "**Commands**\n```{commands}```".format(
             commands=", ".join(commands)
