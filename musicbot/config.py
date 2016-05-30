@@ -143,7 +143,7 @@ class Config:
 
 
 class ConfigDefaults:
-    token = None    #
+    token = None
 
     owner_id = None
     command_prefix = '!'
