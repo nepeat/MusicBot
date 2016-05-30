@@ -1,4 +1,5 @@
 musicbot:
     build: .
+    restart: always
     volumes:
       - musicbotconfig:/app/config
