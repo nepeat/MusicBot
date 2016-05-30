@@ -24,18 +24,16 @@ from musicbot.utils import load_file, write_file
 
 from musicbot import exceptions
 from musicbot import downloader
-from musicbot.util.opus import load_opus_lib
 from musicbot.constants import AUDIO_CACHE_PATH
 from musicbot.commands import all_commands
 
 # Logging
 logging.basicConfig(level=logging.INFO)
+
 if "DEBUG" in os.environ:
     logging.basicConfig(level=logging.DEBUG)
 
 log = logging.getLogger(__name__)
-
-load_opus_lib()
 
 
 class MusicBot(discord.Client):
