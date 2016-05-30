@@ -1,6 +1,8 @@
-from discord.opus import load_opus
+import discord.opus
+
 from musicbot.bot import MusicBot
 
-load_opus()
+if not discord.opus.is_loaded():
+    discord.opus.load_opus('opus')
 
 __all__ = ['MusicBot']
