@@ -21,7 +21,7 @@ from musicbot.constants import AUDIO_CACHE_PATH
 from musicbot.permissions import Permissions, PermissionsDefaults
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
-from musicbot.util import files
+from musicbot.util import config
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -46,8 +46,8 @@ class MusicBot(discord.Client):
         self.config = Config(config_file)
         self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
 
-        self.blacklist = set(files.load(self.config.blacklist_file))
-        self.autoplaylist = files.load(self.config.auto_playlist_file)
+        self.blacklist = set(config.load(self.config.blacklist_file))
+        self.autoplaylist = config.load(self.config.auto_playlist_file)
         self.downloader = downloader.Downloader(download_folder='audio_cache')
 
         self.exit_signal = None
@@ -360,7 +360,7 @@ class MusicBot(discord.Client):
                 if not info:
                     self.autoplaylist.remove(song_url)
                     log.info("[Info] Removing unplayable song from autoplaylist: %s" % song_url)
-                    files.write(self.config.auto_playlist_file, self.autoplaylist)
+                    config.write(self.config.auto_playlist_file, self.autoplaylist)
                     continue
 
                 if info.get('entries', None):  # or .get('_type', '') == 'playlist'

@@ -12,7 +12,7 @@ from musicbot.exceptions import (CommandError, PermissionsError,
                                  WrongEntryTypeError)
 from musicbot.structures import Response
 from musicbot.utils import sane_round_int
-from musicbot.util import files
+from musicbot.util import config
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ async def cmd_blacklist(self, message, user_mentions, option, something):
     if option in ['+', 'add']:
         self.blacklist.update(user.id for user in user_mentions)
 
-        files.write(self.config.blacklist_file, self.blacklist)
+        config.write(self.config.blacklist_file, self.blacklist)
 
         return Response(
             '%s users have been added to the blacklist' % (len(self.blacklist) - old_len),
@@ -58,7 +58,7 @@ async def cmd_blacklist(self, message, user_mentions, option, something):
 
         else:
             self.blacklist.difference_update(user.id for user in user_mentions)
-            files.write(self.config.blacklist_file, self.blacklist)
+            config.write(self.config.blacklist_file, self.blacklist)
 
             return Response(
                 '%s users have been removed from the blacklist' % (old_len - len(self.blacklist)),
