@@ -354,11 +354,11 @@ class MusicBot(discord.Client):
 
         except discord.Forbidden:
             if not quiet:
-                log.info("Warning: Cannot send message to %s, no permission" % dest.name)
+                log.warning("Cannot send message to %s, no permission" % dest.name)
 
         except discord.NotFound:
             if not quiet:
-                log.info("Warning: Cannot send message to %s, invalid channel?" % dest.name)
+                log.warning("Cannot send message to %s, invalid channel?" % dest.name)
 
         return msg
 
@@ -368,11 +368,11 @@ class MusicBot(discord.Client):
 
         except discord.Forbidden:
             if not quiet:
-                log.info("Warning: Cannot delete message \"%s\", no permission" % message.clean_content)
+                log.warning("Cannot delete message \"%s\", no permission" % message.clean_content)
 
         except discord.NotFound:
             if not quiet:
-                log.info("Warning: Cannot delete message \"%s\", message not found" % message.clean_content)
+                log.warning("Cannot delete message \"%s\", message not found" % message.clean_content)
 
     async def safe_edit_message(self, message, new, *, send_if_fail=False, quiet=False):
         try:
@@ -380,7 +380,7 @@ class MusicBot(discord.Client):
 
         except discord.NotFound:
             if not quiet:
-                log.info("Warning: Cannot edit message \"%s\", message not found" % message.clean_content)
+                log.warning("Cannot edit message \"%s\", message not found" % message.clean_content)
             if send_if_fail:
                 if not quiet:
                     log.info("Sending instead")
@@ -747,7 +747,7 @@ class MusicBot(discord.Client):
                 self.server_specific_data[after.server]['auto_paused'] = True
                 player.pause()
 
-    async def on_server_update(self, before:discord.Server, after:discord.Server):
+    async def on_server_update(self, before: discord.Server, after: discord.Server):
         if before.region != after.region:
             log.info("[Servers] \"%s\" changed regions: %s -> %s" % (after.name, before.region, after.region))
 
