@@ -292,47 +292,6 @@ class PlaylistEntry:
 
         return bool(self.filename)
 
-    @classmethod
-    def from_json(cls, playlist, jsonstring):
-        data = json.loads(jsonstring)
-        print(data)
-        # TODO: version check
-        url = data['url']
-        title = data['title']
-        duration = data['duration']
-        downloaded = data['downloaded']
-        filename = data['filename'] if downloaded else None
-        meta = {}
-
-        # TODO: Better [name] fallbacks
-        if 'channel' in data['meta']:
-            ch = playlist.bot.get_channel(data['meta']['channel']['id'])
-            meta['channel'] = ch or data['meta']['channel']['name']
-
-        if 'author' in data['meta']:
-            meta['author'] = meta['channel'].server.get_member(data['meta']['author']['id'])
-
-        return cls(playlist, url, title, duration, filename, **meta)
-
-    def to_json(self):
-        data = {
-            'version': 1,
-            'url': self.url,
-            'title': self.title,
-            'duration': self.duration,
-            'downloaded': self.is_downloaded,
-            'filename': self.filename,
-            'meta': {
-                i: {
-                    'type': self.meta[i].__class__.__name__,
-                    'id': self.meta[i].id,
-                    'name': self.meta[i].name
-                    } for i in self.meta
-                }
-            # Actually I think I can just getattr instead, getattr(discord, type)
-        }
-        return json.dumps(data, indent=2)
-
     # noinspection PyTypeChecker
     async def _download(self):
         if self._is_downloading:
