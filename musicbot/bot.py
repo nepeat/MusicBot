@@ -595,6 +595,10 @@ class MusicBot(discord.Client):
                 await self._check_ignore_non_voice(message)
 
             handler_kwargs = {}
+
+            # Pop the self param to prevent docstrings on all commands..
+            params.pop("self", None)
+
             if params.pop('message', None):
                 handler_kwargs['message'] = message
 
@@ -667,7 +671,7 @@ class MusicBot(discord.Client):
                 )
                 return
 
-            response = await handler(**handler_kwargs)
+            response = await handler(self, **handler_kwargs)
             if response and isinstance(response, Response):
                 content = response.content
                 if response.reply:
