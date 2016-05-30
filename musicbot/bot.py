@@ -5,7 +5,6 @@ import shutil
 import sys
 import traceback
 from collections import defaultdict
-from random import choice
 
 import aiohttp
 import asyncio
@@ -21,6 +20,7 @@ from musicbot.constants import AUDIO_CACHE_PATH
 from musicbot.permissions import Permissions, PermissionsDefaults
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
+from musicbot.structures import SkipState, Response
 from musicbot.utils import config
 
 # Logging
@@ -47,14 +47,9 @@ class MusicBot(discord.Client):
         self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
 
         self.blacklist = set(config.load(self.config.blacklist_file))
-        self.autoplaylist = config.load(self.config.auto_playlist_file)
         self.downloader = downloader.Downloader(download_folder='audio_cache')
 
         self.exit_signal = None
-
-        if not self.autoplaylist:
-            log.warning("Autoplaylist is empty, disabling.")
-            self.config.auto_playlist = False
 
         self.headers['user-agent'] += ' MusicBot/MODIFIED'
 
@@ -137,9 +132,6 @@ class MusicBot(discord.Client):
 
                     if player.is_stopped:
                         player.play()
-
-                    if self.config.auto_playlist:
-                        await self.on_finished_playing(player)
 
                     joined_servers.append(channel.server)
                 except Exception as e:
@@ -314,9 +306,7 @@ class MusicBot(discord.Client):
 
             playlist = Playlist(self)
             player = MusicPlayer(self, voice_client, playlist) \
-                .on('play', self.on_play) \
-                .on('finished-playing', self.on_finished_playing) \
-                .on('entry-added', self.on_entry_added)
+                .on('play', self.on_play)
 
             player.skip_state = SkipState()
             self.players[server.id] = player
@@ -350,38 +340,6 @@ class MusicBot(discord.Client):
                 self.server_specific_data[channel.server]['last_np_msg'] = await self.safe_edit_message(last_np_msg, newmsg, send_if_fail=True)
             else:
                 self.server_specific_data[channel.server]['last_np_msg'] = await self.safe_send_message(channel, newmsg)
-
-    async def on_finished_playing(self, player, **_):
-        if not player.playlist.entries and not player.current_entry and self.config.auto_playlist:
-            while self.autoplaylist:
-                song_url = choice(self.autoplaylist)
-                info = await self.downloader.safe_extract_info(player.playlist.loop, song_url, download=False, process=False)
-
-                if not info:
-                    self.autoplaylist.remove(song_url)
-                    log.info("[Info] Removing unplayable song from autoplaylist: %s" % song_url)
-                    config.write(self.config.auto_playlist_file, self.autoplaylist)
-                    continue
-
-                if info.get('entries', None):  # or .get('_type', '') == 'playlist'
-                    pass  # Wooo playlist
-                    # Blarg how do I want to do this
-
-                # TODO: better checks here
-                try:
-                    await player.playlist.add_entry(song_url, channel=None, author=None)
-                except exceptions.ExtractionError as e:
-                    log.info("Error adding song from autoplaylist:", e)
-                    continue
-
-                break
-
-            if not self.autoplaylist:
-                log.info("[Warning] No playable songs in the autoplaylist, disabling.")
-                self.config.auto_playlist = False
-
-    async def on_entry_added(self, playlist, entry, **_):
-        pass
 
     async def safe_send_message(self, dest, content, *, tts=False, expire_in=0, also_delete=None, quiet=False):
         msg = None
@@ -563,7 +521,6 @@ class MusicBot(discord.Client):
             self.config.skips_required, self._fixg(self.config.skip_ratio_required * 100)))
         log.info("  Now Playing @mentions: " + ['Disabled', 'Enabled'][self.config.now_playing_mentions])
         log.info("  Auto-Summon: " + ['Disabled', 'Enabled'][self.config.auto_summon])
-        log.info("  Auto-Playlist: " + ['Disabled', 'Enabled'][self.config.auto_playlist])
         log.info("  Auto-Pause: " + ['Disabled', 'Enabled'][self.config.auto_pause])
         log.info("  Delete Messages: " + ['Disabled', 'Enabled'][self.config.delete_messages])
         if self.config.delete_messages:
@@ -590,9 +547,6 @@ class MusicBot(discord.Client):
 
             if owner_vc:
                 log.info("Done!", flush=True)  # TODO: Change this to "Joined server/channel"
-                if self.config.auto_playlist:
-                    log.info("Starting auto-playlist")
-                    await self.on_finished_playing(await self.get_player(owner_vc))
             else:
                 log.info("Owner not found in a voice channel, could not autosummon.")
         # t-t-th-th-that's all folks!
@@ -719,7 +673,7 @@ class MusicBot(discord.Client):
                 if response.reply:
                     content = '%s, %s' % (message.author.mention, content)
 
-                sentmsg = await self.safe_send_message(
+                await self.safe_send_message(
                     message.channel, content,
                     expire_in=response.delete_after if self.config.delete_messages else 0,
                     also_delete=message if self.config.delete_invoking else None

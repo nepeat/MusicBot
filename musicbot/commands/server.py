@@ -45,6 +45,3 @@ async def cmd_summon(self, channel, author, voice_channel):
 
     if player.is_stopped:
         player.play()
-
-    if self.config.auto_playlist:
-        await self.on_finished_playing(player)

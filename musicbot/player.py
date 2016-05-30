@@ -3,7 +3,6 @@ import os
 import traceback
 from array import array
 from collections import deque
-from shutil import get_terminal_size
 
 from enum import Enum
 
