@@ -1,14 +1,12 @@
-import asyncio
-
 from collections import defaultdict
 from io import BytesIO
 from textwrap import dedent
 
+import asyncio
 from discord import ChannelType, Forbidden, HTTPException
-
+from musicbot.commands import all_commands, command
 from musicbot.exceptions import CommandError
 from musicbot.structures import Response
-from musicbot.commands import command, all_commands
 
 
 @command("id")

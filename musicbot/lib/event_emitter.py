@@ -1,6 +1,7 @@
-import asyncio
-import traceback
 import collections
+import traceback
+
+import asyncio
 
 
 class EventEmitter:

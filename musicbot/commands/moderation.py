@@ -1,10 +1,10 @@
-import aiohttp
-
 from functools import wraps
 
-from musicbot.structures import Response
+import aiohttp
 from musicbot.commands import command
-from musicbot.exceptions import CommandError, RestartSignal, TerminateSignal, PermissionsError
+from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
+                                 TerminateSignal)
+from musicbot.structures import Response
 
 
 def owner_only(func):

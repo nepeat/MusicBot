@@ -1,8 +1,9 @@
-import os
-import asyncio
 import functools
+import os
+
 import youtube_dl
 
+import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 ytdl_format_options = {

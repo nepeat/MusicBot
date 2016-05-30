@@ -1,31 +1,27 @@
-import os
-import sys
-import shutil
 import inspect
-import aiohttp
-import discord
-import asyncio
-import traceback
 import logging
-
-from discord import utils
-from discord.object import Object
-from discord.enums import ChannelType
-from discord.voice_client import VoiceClient
-
-from random import choice
+import os
+import shutil
+import sys
+import traceback
 from collections import defaultdict
+from random import choice
 
-from musicbot.playlist import Playlist
-from musicbot.player import MusicPlayer
-from musicbot.config import Config, ConfigDefaults
-from musicbot.permissions import Permissions, PermissionsDefaults
-from musicbot.utils import load_file, write_file
-
-from musicbot import exceptions
-from musicbot import downloader
-from musicbot.constants import AUDIO_CACHE_PATH
+import aiohttp
+import asyncio
+import discord
+from discord import utils
+from discord.enums import ChannelType
+from discord.object import Object
+from discord.voice_client import VoiceClient
+from musicbot import downloader, exceptions
 from musicbot.commands import all_commands
+from musicbot.config import Config, ConfigDefaults
+from musicbot.constants import AUDIO_CACHE_PATH
+from musicbot.permissions import Permissions, PermissionsDefaults
+from musicbot.player import MusicPlayer
+from musicbot.playlist import Playlist
+from musicbot.utils import load_file, write_file
 
 # Logging
 logging.basicConfig(level=logging.INFO)

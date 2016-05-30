@@ -1,6 +1,6 @@
+import configparser
 import shutil
 import traceback
-import configparser
 
 from discord import User as discord_User
 

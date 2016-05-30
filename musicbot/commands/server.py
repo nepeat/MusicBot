@@ -1,8 +1,8 @@
 import logging
 
+from musicbot.commands import command
 from musicbot.exceptions import CommandError
 from musicbot.structures import Response
-from musicbot.commands import command
 
 log = logging.getLogger(__name__)
 

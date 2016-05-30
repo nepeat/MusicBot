@@ -1,15 +1,14 @@
-import os
-import json
-import asyncio
-import aiohttp
 import datetime
+import json
+import os
 import traceback
-
-from hashlib import md5
-from random import shuffle
-from itertools import islice
 from collections import deque
+from hashlib import md5
+from itertools import islice
+from random import shuffle
 
+import aiohttp
+import asyncio
 from musicbot.exceptions import ExtractionError, WrongEntryTypeError
 from musicbot.lib.event_emitter import EventEmitter
 

@@ -1,6 +1,6 @@
+import configparser
 import os
 import shutil
-import configparser
 
 from musicbot.exceptions import HelpfulError
 

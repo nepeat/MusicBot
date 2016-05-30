@@ -1,13 +1,13 @@
-import os
-import asyncio
 import audioop
+import os
 import traceback
-
-from enum import Enum
 from array import array
 from collections import deque
 from shutil import get_terminal_size
 
+from enum import Enum
+
+import asyncio
 from musicbot.lib.event_emitter import EventEmitter
 
 

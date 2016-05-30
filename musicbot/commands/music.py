@@ -1,17 +1,17 @@
-import asyncio
 import logging
-import traceback
-import time
 import shlex
-
-from textwrap import dedent
+import time
+import traceback
 from datetime import timedelta
+from textwrap import dedent
 
-from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
-from musicbot.structures import Response
+import asyncio
 from musicbot.commands import command
-from musicbot.exceptions import CommandError, PermissionsError, WrongEntryTypeError
-from musicbot.utils import write_file, sane_round_int
+from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
+from musicbot.exceptions import (CommandError, PermissionsError,
+                                 WrongEntryTypeError)
+from musicbot.structures import Response
+from musicbot.utils import sane_round_int, write_file
 
 log = logging.getLogger(__name__)
 
