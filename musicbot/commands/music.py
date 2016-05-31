@@ -12,6 +12,7 @@ from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
 from musicbot.exceptions import (CommandError, PermissionsError,
                                  WrongEntryTypeError)
 from musicbot.structures import Response
+from musicbot.utils.math import sane_round_int
 
 log = logging.getLogger(__name__)
 
@@ -606,7 +607,7 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
 
     skips_remaining = min(
         self.config.skips_required,
-        musicbot.utils.math.sane_round_int(num_voice * self.config.skip_ratio_required)
+        sane_round_int(num_voice * self.config.skip_ratio_required)
     ) - num_skips
 
     if skips_remaining <= 0:
