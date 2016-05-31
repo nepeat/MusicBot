@@ -20,7 +20,7 @@ from musicbot.constants import AUDIO_CACHE_PATH
 from musicbot.permissions import Permissions, PermissionsDefaults
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
-from musicbot.structures import SkipState, Response
+from musicbot.structures import Response, SkipState
 from musicbot.utils import config
 
 # Logging

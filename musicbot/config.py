@@ -133,12 +133,6 @@ class Config:
 
         self.autojoin_channels = set(item.replace(',', ' ').strip() for item in self.autojoin_channels)
 
-    # TODO: Add save function for future editing of options with commands
-    #       Maybe add warnings about fields missing from the config file
-
-    def write_default_config(self, location):
-        pass
-
 
 class ConfigDefaults:
     token = None
