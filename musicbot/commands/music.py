@@ -6,7 +6,6 @@ from datetime import timedelta
 from textwrap import dedent
 
 import asyncio
-import musicbot.utils
 from musicbot.commands import command
 from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
 from musicbot.exceptions import (CommandError, PermissionsError,

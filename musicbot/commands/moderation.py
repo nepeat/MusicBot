@@ -1,12 +1,12 @@
 from functools import wraps
 
 import aiohttp
+from discord import Game
 from musicbot.commands import command
 from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
                                  TerminateSignal)
 from musicbot.structures import Response
 
-from discord import Game
 
 def owner_only(func):
     @wraps(func)
