@@ -21,7 +21,6 @@ from musicbot.permissions import Permissions, PermissionsDefaults
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
 from musicbot.structures import Response, SkipState
-from musicbot.utils import config
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -46,7 +45,6 @@ class MusicBot(discord.Client):
         self.config = Config(config_file)
         self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
 
-        self.blacklist = set(config.load(self.config.blacklist_file))
         self.downloader = downloader.Downloader(download_folder='audio_cache')
 
         self.exit_signal = None
@@ -576,10 +574,6 @@ class MusicBot(discord.Client):
             if not (message.author.id == self.config.owner_id and command == 'joinserver'):
                 await self.send_message(message.channel, 'You cannot use this bot in private messages.')
                 return
-
-        if message.author.id in self.blacklist and message.author.id != self.config.owner_id:
-            log.info("[User blacklisted] {0.id}/{0.name} ({1})".format(message.author, message_content))
-            return
 
         else:
             log.info("[Command] {0.id}/{0.name} ({1})".format(message.author, message_content))

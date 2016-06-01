@@ -74,8 +74,6 @@ class Config:
         self.delete_messages  = config.getboolean('MusicBot', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
         self.delete_invoking = config.getboolean('MusicBot', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
 
-        self.blacklist_file = config.get('Files', 'BlacklistFile', fallback=ConfigDefaults.blacklist_file)
-
         self.run_checks()
 
 
@@ -153,12 +151,3 @@ class ConfigDefaults:
     delete_invoking = False
 
     options_file = 'config/options.ini'
-    blacklist_file = 'config/blacklist.txt'
-
-# These two are going to be wrappers for the id lists, with add/remove/load/save functions
-# and id/object conversion so types aren't an issue
-class Blacklist:
-    pass
-
-class Whitelist:
-    pass

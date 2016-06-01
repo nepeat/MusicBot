@@ -17,55 +17,6 @@ from musicbot.utils.math import sane_round_int
 log = logging.getLogger(__name__)
 
 
-@command("blacklist")
-async def cmd_blacklist(self, message, user_mentions, option, something):
-    """
-    Usage:
-        {command_prefix}blacklist [ + | - | add | remove ] @UserName [@UserName2 ...]
-
-    Add or remove users to the blacklist.
-    Blacklisted users are forbidden from using bot commands.
-    """
-
-    if not user_mentions:
-        raise CommandError("No users listed.", expire_in=20)
-
-    if option not in ['+', '-', 'add', 'remove']:
-        raise CommandError(
-            'Invalid option "%s" specified, use +, -, add, or remove' % option, expire_in=20
-        )
-
-    for user in user_mentions.copy():
-        if user.id == self.config.owner_id:
-            log.info("[Commands:Blacklist] The owner cannot be blacklisted.")
-            user_mentions.remove(user)
-
-    old_len = len(self.blacklist)
-
-    if option in ['+', 'add']:
-        self.blacklist.update(user.id for user in user_mentions)
-
-        musicbot.utils.config.write(self.config.blacklist_file, self.blacklist)
-
-        return Response(
-            '%s users have been added to the blacklist' % (len(self.blacklist) - old_len),
-            reply=True, delete_after=10
-        )
-
-    else:
-        if self.blacklist.isdisjoint(user.id for user in user_mentions):
-            return Response('none of those users are in the blacklist.', reply=True, delete_after=10)
-
-        else:
-            self.blacklist.difference_update(user.id for user in user_mentions)
-            musicbot.utils.config.write(self.config.blacklist_file, self.blacklist)
-
-            return Response(
-                '%s users have been removed from the blacklist' % (old_len - len(self.blacklist)),
-                reply=True, delete_after=10
-            )
-
-
 @command("play")
 async def cmd_play(self, player, channel, author, permissions, leftover_args, song_url):
     """
