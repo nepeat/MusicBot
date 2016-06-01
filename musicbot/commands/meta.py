@@ -152,7 +152,7 @@ async def cmd_pldump(self, channel, song_url):
         if info.get('url', None) != info.get('webpage_url', info.get('url', None)):
             raise CommandError("This does not seem to be a playlist.", expire_in=25)
         else:
-            return await self.cmd_pldump(channel, info.get(''))
+            return await cmd_pldump(self, channel, info.get(''))
 
     linegens = defaultdict(lambda: None, **{
         "youtube": lambda d: 'https://www.youtube.com/watch?v=%s' % d['id'],

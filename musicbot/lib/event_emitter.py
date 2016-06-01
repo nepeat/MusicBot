@@ -27,13 +27,3 @@ class EventEmitter:
     def on(self, event, cb):
         self._events[event].append(cb)
         return self
-
-    def off(self, event, cb):
-        self._events[event].remove(cb)
-
-        if not self._events[event]:
-            del self._events[event]
-
-        return self
-
-    # TODO: add .once

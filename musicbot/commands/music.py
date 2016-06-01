@@ -179,7 +179,7 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
             if e.use_url == song_url:
                 log.info("[Warning] Determined incorrect entry type, but suggested url is the same.  Help.")
 
-            return await self.cmd_play(player, channel, author, permissions, leftover_args, e.use_url)
+            return await cmd_play(self, player, channel, author, permissions, leftover_args, e.use_url)
 
         reply_text = "Enqueued **%s** to be played. Position in queue: %s"
         btext = entry.title
@@ -320,7 +320,7 @@ async def cmd_search(self, player, channel, author, permissions, leftover_args):
         if not leftover_args:
             raise CommandError(
                 "Please specify a search query.\n%s" % dedent(
-                    self.cmd_search.__doc__.format(command_prefix=self.config.command_prefix)),
+                    cmd_search.__doc__.format(command_prefix=self.config.command_prefix)),
                 expire_in=60
             )
 
@@ -412,7 +412,7 @@ async def cmd_search(self, player, channel, author, permissions, leftover_args):
             await self.safe_delete_message(confirm_message)
             await self.safe_delete_message(response_message)
 
-            await self.cmd_play(player, channel, author, permissions, [], e['webpage_url'])
+            await cmd_play(self, player, channel, author, permissions, [], e['webpage_url'])
 
             return Response("Alright, coming right up!", delete_after=30)
         else:

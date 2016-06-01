@@ -20,7 +20,7 @@ class Config:
                 c = configparser.ConfigParser()
                 c.read(config_file, encoding='utf-8')
 
-                if not int(c.get('Permissions', 'OwnerID', fallback=0)): # jake pls no flame
+                if not int(c.get('Permissions', 'OwnerID', fallback=0)):
                     print("\nPlease configure config/options.ini and restart the bot.", flush=True)
                     os._exit(1)
 
@@ -31,7 +31,7 @@ class Config:
                     "from the repo.  Stop removing important files!"
                 )
 
-            except ValueError: # Config id value was changed but its not valid
+            except ValueError:
                 print("\nInvalid value for OwnerID, config cannot be loaded.")
                 # TODO: HelpfulError
                 os._exit(4)
