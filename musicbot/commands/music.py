@@ -3,6 +3,7 @@ import shlex
 import time
 import traceback
 from datetime import timedelta
+from io import BytesIO
 from textwrap import dedent
 
 import asyncio
@@ -639,13 +640,15 @@ async def cmd_volume(self, message, player, new_volume=None):
 
 
 @command("queue")
-async def cmd_queue(self, channel, player):
+async def cmd_queue(self, channel, player, sendas=None):
     """
     Usage:
         {command_prefix}queue
 
     Prints the current song queue.
     """
+
+    full = sendas == "file"
 
     lines = []
     unlisted = 0
@@ -670,7 +673,7 @@ async def cmd_queue(self, channel, player):
 
         currentlinesum = sum(len(x) + 1 for x in lines)  # +1 is for newline char
 
-        if currentlinesum + len(nextline) + len(andmoretext) > DISCORD_MSG_CHAR_LIMIT:
+        if currentlinesum + len(nextline) + len(andmoretext) > DISCORD_MSG_CHAR_LIMIT and not full:
             if currentlinesum + len(andmoretext):
                 unlisted += 1
                 continue
@@ -685,4 +688,15 @@ async def cmd_queue(self, channel, player):
             'There are no songs queued! Queue something with {}play.'.format(self.config.command_prefix))
 
     message = '\n'.join(lines)
+
+    if full:
+        with BytesIO as data:
+            data.writelines(x.encode('utf8') + b'\n' for x in message)
+            data.seek(0)
+            await self.send_file(
+                channel,
+                data,
+                filename='musicbot-full-queue.txt'
+            )
+
     return Response(message, delete_after=30)
