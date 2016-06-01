@@ -11,7 +11,7 @@ from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
 from musicbot.exceptions import (CommandError, PermissionsError,
                                  WrongEntryTypeError)
 from musicbot.structures import Response
-from musicbot.utils.math import sane_round_int
+from musicbot.utils import sane_round_int
 
 log = logging.getLogger(__name__)
 

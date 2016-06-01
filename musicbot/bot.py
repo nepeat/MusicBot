@@ -1,7 +1,6 @@
 import inspect
 import logging
 import os
-import shutil
 import sys
 import traceback
 from collections import defaultdict
@@ -9,11 +8,10 @@ from collections import defaultdict
 import aiohttp
 import asyncio
 import discord
-from discord import utils
 from discord.enums import ChannelType
 from discord.object import Object
 from discord.voice_client import VoiceClient
-from musicbot import downloader, exceptions
+from musicbot import downloader, exceptions, utils
 from musicbot.commands import all_commands
 from musicbot.config import Config, ConfigDefaults
 from musicbot.constants import AUDIO_CACHE_PATH
@@ -78,23 +76,6 @@ class MusicBot(discord.Client):
                             return m
         else:
             return discord.utils.find(lambda m: m.id == self.config.owner_id, self.get_all_members())
-
-    def _delete_old_audiocache(self, path=AUDIO_CACHE_PATH):
-        try:
-            shutil.rmtree(path)
-            return True
-        except:
-            try:
-                os.rename(path, path + '__')
-            except:
-                return False
-            try:
-                shutil.rmtree(path)
-            except:
-                os.rename(path + '__', path)
-                return False
-
-        return True
 
     # TODO: autosummon option to a specific channel
     async def _auto_summon(self):
@@ -288,7 +269,7 @@ class MusicBot(discord.Client):
                 }
             }
 
-            await self.ws.send(utils.to_json(payload))
+            await self.ws.send(discord.utils.to_json(payload))
             self.the_voice_clients[server.id].channel = channel
 
     async def get_player(self, channel, create=False) -> MusicPlayer:
@@ -529,7 +510,7 @@ class MusicBot(discord.Client):
         # wait_for_message is pretty neato
 
         if not self.config.save_videos and os.path.isdir(AUDIO_CACHE_PATH):
-            if self._delete_old_audiocache():
+            if utils.delete_old_audiocache():
                 log.info("Deleting old audio cache")
             else:
                 log.info("Could not delete old audio cache, moving on.")
@@ -591,7 +572,11 @@ class MusicBot(discord.Client):
             handler_kwargs = {}
 
             # Pop the self param to prevent docstrings on all commands..
-            params.pop("self", None)
+            if params.pop("self", None):
+                handler_kwargs['self'] = self
+
+            if params.pop("bot", None):
+                handler_kwargs['bot'] = self
 
             if params.pop('message', None):
                 handler_kwargs['message'] = message
@@ -665,7 +650,7 @@ class MusicBot(discord.Client):
                 )
                 return
 
-            response = await handler(self, **handler_kwargs)
+            response = await handler(**handler_kwargs)
             if response and isinstance(response, Response):
                 content = response.content
                 if response.reply:
