@@ -11,14 +11,12 @@ import discord
 from discord.enums import ChannelType
 from discord.object import Object
 from discord.voice_client import VoiceClient
-from musicbot import downloader, exceptions, utils
+from musicbot import downloader, exceptions
 from musicbot.commands import all_commands
-from musicbot.config import Config, ConfigDefaults
-from musicbot.constants import AUDIO_CACHE_PATH
-from musicbot.permissions import Permissions, PermissionsDefaults
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
 from musicbot.structures import Response, SkipState
+from musicbot.utils import load_config
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 class MusicBot(discord.Client):
-    def __init__(self, config_file=ConfigDefaults.options_file, perms_file=PermissionsDefaults.perms_file):
+    def __init__(self):
         super().__init__()
 
         self.players = {}
@@ -39,8 +37,7 @@ class MusicBot(discord.Client):
         self.voice_client_move_lock = asyncio.Lock()
         self.aiosession = aiohttp.ClientSession(loop=self.loop)
 
-        self.config = Config(config_file)
-        self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
+        load_config(self)
 
         self.downloader = downloader.Downloader(download_folder='audio_cache')
 

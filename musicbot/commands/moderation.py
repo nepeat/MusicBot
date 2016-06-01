@@ -6,6 +6,7 @@ from musicbot.commands import command
 from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
                                  TerminateSignal)
 from musicbot.structures import Response
+from musicbot.util import load_config
 
 
 def owner_only(func):
@@ -121,4 +122,11 @@ async def setgame(self, message, leftover_args, game):
 
     await self.change_status(game)
 
+    return Response(":ok_hand:", delete_after=20)
+
+
+@owner_only
+@command("reloadconfig")
+def cmd_reloadconfig(bot):
+    load_config(bot)
     return Response(":ok_hand:", delete_after=20)
