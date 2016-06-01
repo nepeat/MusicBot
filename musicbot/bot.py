@@ -77,14 +77,6 @@ class MusicBot(discord.Client):
         else:
             return discord.utils.find(lambda m: m.id == self.config.owner_id, self.get_all_members())
 
-    # TODO: autosummon option to a specific channel
-    async def _auto_summon(self):
-        owner = self._get_owner(voice=True)
-        if owner:
-            log.info("Found owner in \"%s\", attempting to join..." % owner.voice_channel.name)
-            await all_commands["summon"](self, owner.voice_channel, owner, None)
-            return owner.voice_channel
-
     async def _autojoin_channels(self, channels):
         joined_servers = []
 
@@ -499,7 +491,6 @@ class MusicBot(discord.Client):
         log.info("  Skip threshold: %s votes or %s%%" % (
             self.config.skips_required, self._fixg(self.config.skip_ratio_required * 100)))
         log.info("  Now Playing @mentions: " + ['Disabled', 'Enabled'][self.config.now_playing_mentions])
-        log.info("  Auto-Summon: " + ['Disabled', 'Enabled'][self.config.auto_summon])
         log.info("  Auto-Pause: " + ['Disabled', 'Enabled'][self.config.auto_pause])
         log.info("  Delete Messages: " + ['Disabled', 'Enabled'][self.config.delete_messages])
         if self.config.delete_messages:
@@ -518,16 +509,6 @@ class MusicBot(discord.Client):
         if self.config.autojoin_channels:
             await self._autojoin_channels(autojoin_channels)
 
-        elif self.config.auto_summon:
-            log.info("Attempting to autosummon...", flush=True)
-
-            # waitfor + get value
-            owner_vc = await self._auto_summon()
-
-            if owner_vc:
-                log.info("Done!", flush=True)  # TODO: Change this to "Joined server/channel"
-            else:
-                log.info("Owner not found in a voice channel, could not autosummon.")
         # t-t-th-th-that's all folks!
 
     async def on_message(self, message):
