@@ -118,6 +118,12 @@ async def cmd_setavatar(self, message, url=None):
 
 @command("setgame")
 async def setgame(self, message, leftover_args, game):
+    """
+    Usage:
+        {command_prefix}setname [game]
+
+    Changes the bot's game status.
+    """
     game = Game(name=" ".join([game, *leftover_args]))
 
     await self.change_status(game)
@@ -128,5 +134,11 @@ async def setgame(self, message, leftover_args, game):
 @owner_only
 @command("reloadconfig")
 def cmd_reloadconfig(bot):
+    """
+    Usage:
+        {command_prefix}reloadconfig
+
+    This reloads the bot configs.
+    """
     load_config(bot)
     return Response(":ok_hand:", delete_after=20)
