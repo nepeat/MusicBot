@@ -489,15 +489,18 @@ async def cmd_resume(self, player):
 
 
 @command("shuffle")
-async def cmd_shuffle(self, channel, player):
+async def cmd_shuffle(self, channel, player, seed, leftover_args):
     """
     Usage:
-        {command_prefix}shuffle
+        {command_prefix}shuffle [seed]
 
     Shuffles the playlist.
     """
 
-    player.playlist.shuffle()
+    if leftover_args:
+        seed = ' '.join([seed, *leftover_args])
+
+    player.playlist.shuffle(seed)
 
     return Response("Shuffled playlist!", delete_after=15)
 

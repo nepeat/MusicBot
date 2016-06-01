@@ -1,10 +1,10 @@
 import datetime
 import os
+import random
 import traceback
 from collections import deque
 from hashlib import md5
 from itertools import islice
-from random import shuffle
 
 import aiohttp
 import asyncio
@@ -27,8 +27,12 @@ class Playlist(EventEmitter):
     def __iter__(self):
         return iter(self.entries)
 
-    def shuffle(self):
-        shuffle(self.entries)
+    def shuffle(self, seed=None):
+        if seed:
+            random.seed(seed)
+
+        random.shuffle(self.entries)
+        random.seed()
 
     def clear(self):
         self.entries.clear()
