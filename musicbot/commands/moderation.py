@@ -117,7 +117,7 @@ async def cmd_setavatar(self, message, url=None):
 
 
 @command("setgame")
-async def setgame(self, message, leftover_args, game=None):
+async def cmd_setgame(self, message, leftover_args, game=None):
     """
     Usage:
         {command_prefix}setname [game]
