@@ -35,7 +35,6 @@ class MusicBot(discord.Client):
 
         self.players = {}
         self.the_voice_clients = {}
-        self.locks = defaultdict(asyncio.Lock)
         self.voice_client_connect_lock = asyncio.Lock()
         self.voice_client_move_lock = asyncio.Lock()
         self.aiosession = aiohttp.ClientSession(loop=self.loop)
@@ -189,12 +188,6 @@ class MusicBot(discord.Client):
                         )
 
             return voice_client
-
-    async def mute_voice_client(self, channel, mute):
-        await self._update_voice_state(channel, mute=mute)
-
-    async def deafen_voice_client(self, channel, deaf):
-        await self._update_voice_state(channel, deaf=deaf)
 
     async def move_voice_client(self, channel):
         await self._update_voice_state(channel)
@@ -436,18 +429,15 @@ class MusicBot(discord.Client):
         log.info("ID:%s/%s#%s" % (self.user.id, self.user.name, self.user.discriminator))
 
         owner = self._get_owner(voice=True) or self._get_owner()
-        if owner and self.servers:
-            log.info("Owner:%s/%s#%s" % (owner.id, owner.name, owner.discriminator))
+
+        if self.servers:
+            if owner:
+                log.info("Owner:%s/%s#%s" % (owner.id, owner.name, owner.discriminator))
+            else:
+                log.info("Owner could not be found on any server (id: %s)\n" % self.config.owner_id)
 
             log.info('Server List:')
             [log.info(' - ' + s.name) for s in self.servers]
-
-        elif self.servers:
-            log.info("Owner could not be found on any server (id: %s)\n" % self.config.owner_id)
-
-            log.info('Server List:')
-            [log.info(' - ' + s.name) for s in self.servers]
-
         else:
             log.info("Owner unavailable, bot is not on any servers.")
             # if bot: post help link, else post something about invite links
@@ -522,7 +512,7 @@ class MusicBot(discord.Client):
             return
 
         if self.config.bound_channels and message.channel.id not in self.config.bound_channels and not message.channel.is_private:
-            return  # if I want to log this I just move it under the prefix check
+            return
 
         command, *args = message_content.split()  # Uh, doesn't this break prefixes with spaces in them (it doesn't, config parser already breaks them)
         command = command[len(self.config.command_prefix):].lower().strip()
