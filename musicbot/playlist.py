@@ -287,6 +287,15 @@ class PlaylistEntry:
         self._waiting_futures = []
         self.download_folder = self.playlist.downloader.download_folder
 
+    def __dict__(self):
+        return {
+            "url": self.url,
+            "title": self.title,
+            "duration": self.duration,
+            "expected_filename": self.expected_filename,
+            "meta": self.meta
+        }
+
     @property
     def is_downloaded(self):
         if self._is_downloading:
