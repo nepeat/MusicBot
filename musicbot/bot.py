@@ -50,7 +50,7 @@ class MusicBot(discord.Client):
         self.headers['user-agent'] += ' MusicBot/MODIFIED'
 
         # TODO: Do these properly
-        ssd_defaults = {'last_np_msg': None, 'auto_paused': False}
+        ssd_defaults = {'last_np_msg': None}
         self.server_specific_data = defaultdict(lambda: dict(ssd_defaults))
 
     @staticmethod
@@ -491,7 +491,6 @@ class MusicBot(discord.Client):
         log.info("  Skip threshold: %s votes or %s%%" % (
             self.config.skips_required, self._fixg(self.config.skip_ratio_required * 100)))
         log.info("  Now Playing @mentions: " + ['Disabled', 'Enabled'][self.config.now_playing_mentions])
-        log.info("  Auto-Pause: " + ['Disabled', 'Enabled'][self.config.auto_pause])
         log.info("  Delete Messages: " + ['Disabled', 'Enabled'][self.config.delete_messages])
         if self.config.delete_messages:
             log.info("    Delete Invoking: " + ['Disabled', 'Enabled'][self.config.delete_invoking])
@@ -687,25 +686,10 @@ class MusicBot(discord.Client):
 
         moving = before == before.server.me
 
-        auto_paused = self.server_specific_data[after.server]['auto_paused']
         player = await self.get_player(my_voice_channel)
 
         if after == after.server.me and after.voice_channel:
             player.voice_client.channel = after.voice_channel
-
-        if not self.config.auto_pause:
-            return
-
-        if sum(1 for m in my_voice_channel.voice_members if m != after.server.me):
-            if auto_paused and player.is_paused:
-                log.info("[autopause] Unpausing")
-                self.server_specific_data[after.server]['auto_paused'] = False
-                player.resume()
-        else:
-            if not auto_paused and player.is_playing:
-                log.info("[autopause] Pausing")
-                self.server_specific_data[after.server]['auto_paused'] = True
-                player.pause()
 
     async def on_server_update(self, before: discord.Server, after: discord.Server):
         if before.region != after.region:

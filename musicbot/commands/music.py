@@ -543,7 +543,7 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
                   "You might want to restart the bot if it doesn't start working.")
 
     if author.id == self.config.owner_id or permissions.instaskip:
-        player.skip()  # check autopause stuff here
+        player.skip()
         await self._manual_delete_check(message)
         return
 
@@ -561,7 +561,7 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
     ) - num_skips
 
     if skips_remaining <= 0:
-        player.skip()  # check autopause stuff here
+        player.skip()
         return Response(
             'your skip for **{title}** was acknowledged.'
             '\nThe vote to skip has been passed.{extra}'.format(
