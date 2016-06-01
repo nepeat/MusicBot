@@ -489,7 +489,7 @@ async def cmd_resume(self, player):
 
 
 @command("shuffle")
-async def cmd_shuffle(self, channel, player, seed, leftover_args):
+async def cmd_shuffle(self, channel, player, leftover_args, seed=None):
     """
     Usage:
         {command_prefix}shuffle [seed]
