@@ -117,14 +117,17 @@ async def cmd_setavatar(self, message, url=None):
 
 
 @command("setgame")
-async def setgame(self, message, leftover_args, game):
+async def setgame(self, message, leftover_args, game=None):
     """
     Usage:
         {command_prefix}setname [game]
 
     Changes the bot's game status.
     """
-    game = Game(name=" ".join([game, *leftover_args]))
+    if game:
+        game = Game(name=" ".join([game, *leftover_args]))
+    else:
+        game = Game(name="")
 
     await self.change_status(game)
 
