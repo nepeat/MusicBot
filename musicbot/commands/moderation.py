@@ -6,6 +6,7 @@ from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
                                  TerminateSignal)
 from musicbot.structures import Response
 
+from discord import Game
 
 def owner_only(func):
     @wraps(func)
@@ -110,5 +111,14 @@ async def cmd_setavatar(self, message, url=None):
 
     except Exception as e:
         raise CommandError("Unable to change avatar: %s" % e, expire_in=20)
+
+    return Response(":ok_hand:", delete_after=20)
+
+
+@command("setgame")
+async def setgame(self, message, leftover_args, game):
+    game = Game(name=" ".join([game, *leftover_args]))
+
+    await self.change_status(game)
 
     return Response(":ok_hand:", delete_after=20)
