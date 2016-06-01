@@ -563,10 +563,10 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
     if skips_remaining <= 0:
         player.skip()  # check autopause stuff here
         return Response(
-            'your skip for **{}** was acknowledged.'
-            '\nThe vote to skip has been passed.{}'.format(
-                player.current_entry.title,
-                ' Next song coming up!' if player.playlist.peek() else ''
+            'your skip for **{title}** was acknowledged.'
+            '\nThe vote to skip has been passed.{extra}'.format(
+                title=player.current_entry.title,
+                extra=' Next song coming up!' if player.playlist.peek() else ''
             ),
             reply=True,
             delete_after=20
@@ -575,11 +575,11 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
     else:
         # TODO: When a song gets skipped, delete the old x needed to skip messages
         return Response(
-            'your skip for **{}** was acknowledged.'
-            '\n**{}** more {} required to vote to skip this song.'.format(
-                player.current_entry.title,
-                skips_remaining,
-                'person is' if skips_remaining == 1 else 'people are'
+            'your skip for **{title}** was acknowledged.'
+            '\n**{remaining}** more {votes} required to vote to skip this song.'.format(
+                title=player.current_entry.title,
+                remaining=skips_remaining,
+                votes='person is' if skips_remaining == 1 else 'people are'
             ),
             reply=True,
             delete_after=20
