@@ -148,14 +148,6 @@ class MusicPlayer(EventEmitter):
         if not self.is_stopped and not self.is_dead:
             self.play(_continue=True)
 
-        if not self.bot.config.save_videos and entry:
-            if any([entry.filename == e.filename for e in self.playlist.entries]):
-                print("[Config:SaveVideos] Skipping deletion, found song in queue")
-
-            else:
-                # print("[Config:SaveVideos] Deleting file: %s" % os.path.relpath(entry.filename))
-                asyncio.ensure_future(self._delete_file(entry.filename))
-
         self.emit('finished-playing', player=self, entry=entry)
 
     def _kill_current_player(self):
@@ -171,24 +163,6 @@ class MusicPlayer(EventEmitter):
             return True
 
         return False
-
-    async def _delete_file(self, filename):
-        for x in range(30):
-            try:
-                os.unlink(filename)
-                break
-
-            except PermissionError as e:
-                if e.winerror == 32:  # File is in use
-                    await asyncio.sleep(0.25)
-
-            except Exception as e:
-                traceback.print_exc()
-                print("Error trying to delete " + filename)
-                break
-        else:
-            print("[Config:SaveVideos] Could not delete file {}, giving up and moving on".format(
-                os.path.relpath(filename)))
 
     def play(self, _continue=False):
         self.loop.create_task(self._play(_continue=_continue))

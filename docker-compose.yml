@@ -10,8 +10,11 @@ services:
         REDIS_PORT: 6379
       volumes:
         - musicbotconfig:/app/config
+        - musicbotaudiocache:/app/audio_cache
       depends_on:
         - redis
 volumes:
   musicbotconfig:
+    driver: local
+  musicbotaudiocache:
     driver: local

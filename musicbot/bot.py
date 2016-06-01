@@ -484,16 +484,9 @@ class MusicBot(discord.Client):
         log.info("  Delete Messages: " + ['Disabled', 'Enabled'][self.config.delete_messages])
         if self.config.delete_messages:
             log.info("    Delete Invoking: " + ['Disabled', 'Enabled'][self.config.delete_invoking])
-        log.info("  Downloaded songs will be %s" % ['deleted', 'saved'][self.config.save_videos])
 
         # maybe option to leave the ownerid blank and generate a random command for the owner to use
         # wait_for_message is pretty neato
-
-        if not self.config.save_videos and os.path.isdir(AUDIO_CACHE_PATH):
-            if utils.delete_old_audiocache():
-                log.info("Deleting old audio cache")
-            else:
-                log.info("Could not delete old audio cache, moving on.")
 
         if self.config.autojoin_channels:
             await self._autojoin_channels(autojoin_channels)
