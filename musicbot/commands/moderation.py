@@ -136,7 +136,7 @@ async def cmd_setgame(self, message, leftover_args, game=None):
 
 @owner_only
 @command("reloadconfig")
-def cmd_reloadconfig(bot):
+async def cmd_reloadconfig(bot):
     """
     Usage:
         {command_prefix}reloadconfig
