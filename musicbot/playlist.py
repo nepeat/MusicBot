@@ -65,10 +65,12 @@ class Playlist(EventEmitter):
         self.redis.rpush("musicqueue:" + self.serverid, *[entry.to_json() for entry in self.entries])
         random.seed()
 
-    def clear(self, kill=False):
+    def clear(self, kill=False, last_entry=None):
         self.entries.clear()
 
-        if not kill:
+        if kill and last_entry:
+            self.redis.lpush("musicqueue:" + self.serverid, last_entry.to_json())
+        else:
             self.redis.delete("musicqueue:" + self.serverid)
 
     async def add_entry(self, song_url, saved=False, **meta):
@@ -99,7 +101,7 @@ class Playlist(EventEmitter):
                 # https://github.com/KeepSafe/aiohttp/issues/758
                 # https://github.com/KeepSafe/aiohttp/issues/852
                 content_type = await get_header(self.bot.aiosession, info['url'], 'CONTENT-TYPE')
-                log.debug("Got content type", content_type)
+                log.debug("Got content type %s", content_type)
 
             except Exception as e:
                 log.warning("Failed to get content type for url %s (%s)", song_url, e)
@@ -406,10 +408,10 @@ class PlaylistEntry:
 
                 if expected_fname_base in ldir:
                     self.filename = os.path.join(self.download_folder, expected_fname_base)
-                    log.info("Cached:", self.url)
+                    log.info("Cached: %s", self.url)
 
                 elif expected_fname_noex in flistdir:
-                    log.info("Cached (different extension):", self.url)
+                    log.info("Cached (different extension): %s", self.url)
                     self.filename = os.path.join(self.download_folder, ldir[flistdir.index(expected_fname_noex)])
                     log.info("Expected %s, got %s" % (
                         self.expected_filename.rsplit('.', 1)[-1],
@@ -431,14 +433,14 @@ class PlaylistEntry:
 
     # noinspection PyShadowingBuiltins
     async def _really_download(self, *, hash=False):
-        log.info("Started:", self.url)
+        log.info("Started: %s", self.url)
 
         try:
             result = await self.playlist.downloader.extract_info(self.playlist.loop, self.url, download=True)
         except Exception as e:
             raise ExtractionError(e)
 
-        log.info("Complete:", self.url)
+        log.info("Completed: %s", self.url)
 
         if result is None:
             raise ExtractionError("ytdl broke and hell if I know why")

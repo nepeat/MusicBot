@@ -131,8 +131,11 @@ class MusicPlayer(EventEmitter):
         raise ValueError('Cannot pause a MusicPlayer in state %s' % self.state)
 
     def kill(self):
+        # Save the current entry before killing the bot.
+        current = self.current_entry
+
         self.state = MusicPlayerState.DEAD
-        self.playlist.clear(kill=True)
+        self.playlist.clear(kill=True, last_entry=current)
         self._events.clear()
         self._kill_current_player()
 
