@@ -39,7 +39,6 @@ class Playlist(EventEmitter):
 
     def load_saved(self):
         items = self.redis.lrange("musicqueue:" + self.serverid, 0, -1)
-        self.redis.delete("musicqueue:" + self.serverid)
 
         for item in items:
             meta = {}
@@ -55,7 +54,7 @@ class Playlist(EventEmitter):
                 meta["channel"] = self.bot.get_channel(data["meta"]["channel"])
                 meta["author"] = meta["channel"].server.get_member(data["meta"]["author"])
 
-            asyncio.ensure_future(self.add_entry(data["url"], **meta), loop=self.bot.loop)
+            asyncio.ensure_future(self.add_entry(data["url"], saved=True, **meta), loop=self.bot.loop)
 
     def shuffle(self, seed=None):
         if seed:
@@ -70,7 +69,7 @@ class Playlist(EventEmitter):
         self.entries.clear()
         self.redis.delete("musicqueue:" + self.serverid)
 
-    async def add_entry(self, song_url, **meta):
+    async def add_entry(self, song_url, saved=False, **meta):
         """
             Validates and adds a song_url to be played. This does not start the download of the song.
 
@@ -120,7 +119,7 @@ class Playlist(EventEmitter):
             self.downloader.ytdl.prepare_filename(info),
             **meta
         )
-        self._add_entry(entry)
+        self._add_entry(entry, saved)
         return entry, len(self.entries)
 
     async def import_from(self, playlist_url, **meta):
@@ -257,9 +256,10 @@ class Playlist(EventEmitter):
 
         return gooditems
 
-    def _add_entry(self, entry):
+    def _add_entry(self, entry, saved=False):
         self.entries.append(entry)
-        self.redis.rpush("musicqueue:" + self.serverid, entry.to_json())
+        if not saved:
+            self.redis.rpush("musicqueue:" + self.serverid, entry.to_json())
         self.emit('entry-added', playlist=self, entry=entry)
 
         if self.peek() is entry:
