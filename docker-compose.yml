@@ -2,6 +2,9 @@ version: '2'
 services:
   redis:
     image: redis:3.2.0-alpine
+    volumes:
+      - musicbotredis:/data
+    command: "redis-server --appendonly yes"
   musicbot:
       build: .
       restart: always
@@ -17,4 +20,6 @@ volumes:
   musicbotconfig:
     driver: local
   musicbotaudiocache:
+    driver: local
+  musicbotredis:
     driver: local
