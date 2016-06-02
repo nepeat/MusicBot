@@ -1,4 +1,6 @@
 import datetime
+import json
+import logging
 import os
 import random
 import traceback
@@ -6,14 +8,13 @@ from collections import deque
 from hashlib import md5
 from itertools import islice
 
+import redis
+
 import aiohttp
 import asyncio
+from musicbot.connections import redis_pool
 from musicbot.exceptions import ExtractionError, WrongEntryTypeError
 from musicbot.lib.event_emitter import EventEmitter
-import redis
-from musicbot.connections import redis_pool
-import json
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -69,7 +70,6 @@ class Playlist(EventEmitter):
     def clear(self):
         self.entries.clear()
         self.redis.delete("musicqueue:" + self.serverid)
-
 
     async def add_entry(self, song_url, **meta):
         """

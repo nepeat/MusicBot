@@ -1,5 +1,6 @@
-import redis
 import os
+
+import redis
 
 redis_pool = redis.ConnectionPool(
     host=os.environ.get("REDIS_HOST", "localhost"),
