@@ -102,7 +102,7 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
 
         if info['extractor'].lower() in ['youtube:playlist', 'soundcloud:set', 'bandcamp:album']:
             try:
-                return await play_playlist_async(player, channel, author, permissions, song_url, info['extractor'])
+                return await play_playlist_async(self, player, channel, author, permissions, song_url, info['extractor'])
             except CommandError:
                 raise
             except Exception as e:
@@ -648,7 +648,10 @@ async def cmd_queue(self, channel, player, sendas=None):
     Prints the current song queue.
     """
 
-    full = sendas == "file"
+    if sendas:
+        sendall = (sendas.lower() in ['file', 'full', 'all'])
+    else:
+        sendall = False
 
     lines = []
     unlisted = 0
@@ -673,7 +676,7 @@ async def cmd_queue(self, channel, player, sendas=None):
 
         currentlinesum = sum(len(x) + 1 for x in lines)  # +1 is for newline char
 
-        if currentlinesum + len(nextline) + len(andmoretext) > DISCORD_MSG_CHAR_LIMIT and not full:
+        if (currentlinesum + len(nextline) + len(andmoretext) > DISCORD_MSG_CHAR_LIMIT) and not sendall:
             if currentlinesum + len(andmoretext):
                 unlisted += 1
                 continue
@@ -689,11 +692,11 @@ async def cmd_queue(self, channel, player, sendas=None):
 
     message = '\n'.join(lines)
 
-    if full:
-        with BytesIO as data:
-            data.writelines(x.encode('utf8') + b'\n' for x in message)
+    if sendall:
+        with BytesIO() as data:
+            data.writelines(x.encode('utf8') + b'\n' for x in lines)
             data.seek(0)
-            await self.send_file(
+            return await self.send_file(
                 channel,
                 data,
                 filename='musicbot-full-queue.txt'
