@@ -6,7 +6,7 @@ from musicbot.commands import command
 from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
                                  TerminateSignal)
 from musicbot.structures import Response
-from musicbot.util import load_config
+from musicbot.utils import load_config
 
 
 def owner_only(func):
@@ -130,6 +130,21 @@ async def cmd_setgame(self, message, leftover_args, game=None):
         game = Game(name="")
 
     await self.change_status(game)
+
+    return Response(":ok_hand:", delete_after=20)
+
+
+@command("settopic")
+async def cmd_settopic(self, message, channel, leftover_args, topic):
+    """
+    Usage:
+        {command_prefix}settopic [topic]
+
+    Changes the current text or voice channel's topic.
+    """
+    topic = " ".join([topic, *leftover_args])
+
+    await self.edit_channel(channel, topic=topic)
 
     return Response(":ok_hand:", delete_after=20)
 
