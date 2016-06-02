@@ -10,6 +10,12 @@ import aiohttp
 import asyncio
 from musicbot.exceptions import ExtractionError, WrongEntryTypeError
 from musicbot.lib.event_emitter import EventEmitter
+import redis
+from musicbot.connections import redis_pool
+import json
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class Playlist(EventEmitter):
@@ -17,25 +23,53 @@ class Playlist(EventEmitter):
         A playlist is manages the list of songs that will be played.
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot, serverid):
         super().__init__()
         self.bot = bot
+        self.serverid = serverid
         self.loop = bot.loop
         self.downloader = bot.downloader
         self.entries = deque()
 
+        self.redis = redis.StrictRedis(connection_pool=redis_pool)
+        self.load_saved()
+
     def __iter__(self):
         return iter(self.entries)
+
+    def load_saved(self):
+        items = self.redis.lrange("musicqueue:" + self.serverid, 0, -1)
+        self.redis.delete("musicqueue:" + self.serverid)
+
+        for item in items:
+            meta = {}
+
+            try:
+                data = json.loads(item)
+            except json.JSONDecodeError as e:
+                log.error(e)
+                log.error(item)
+                continue
+
+            if "channel" in data["meta"] and "author" in data["meta"]:
+                meta["channel"] = self.bot.get_channel(data["meta"]["channel"])
+                meta["author"] = meta["channel"].server.get_member(data["meta"]["author"])
+
+            asyncio.ensure_future(self.add_entry(data["url"], **meta), loop=self.bot.loop)
 
     def shuffle(self, seed=None):
         if seed:
             random.seed(seed)
 
         random.shuffle(self.entries)
+        self.redis.delete("musicqueue:" + self.serverid)
+        self.redis.rpush("musicqueue:" + self.serverid, *[entry.to_json() for entry in self.entries])
         random.seed()
 
     def clear(self):
         self.entries.clear()
+        self.redis.delete("musicqueue:" + self.serverid)
+
 
     async def add_entry(self, song_url, **meta):
         """
@@ -226,6 +260,7 @@ class Playlist(EventEmitter):
 
     def _add_entry(self, entry):
         self.entries.append(entry)
+        self.redis.rpush("musicqueue:" + self.serverid, entry.to_json())
         self.emit('entry-added', playlist=self, entry=entry)
 
         if self.peek() is entry:
@@ -242,6 +277,7 @@ class Playlist(EventEmitter):
             return None
 
         entry = self.entries.popleft()
+        self.redis.lpop("musicqueue:" + self.serverid)
 
         if predownload_next:
             next_entry = self.peek()
@@ -287,14 +323,24 @@ class PlaylistEntry:
         self._waiting_futures = []
         self.download_folder = self.playlist.downloader.download_folder
 
-    def __dict__(self):
-        return {
+    def to_json(self):
+        author = self.meta.get("author", None)
+        channel = self.meta.get("channel", None)
+
+        if author and channel:
+            authorid = author.id
+            channelid = channel.id
+        else:
+            authorid = None
+            channelid = None
+
+        return json.dumps({
             "url": self.url,
-            "title": self.title,
-            "duration": self.duration,
-            "expected_filename": self.expected_filename,
-            "meta": self.meta
-        }
+            "meta": {
+                "author": authorid,
+                "channel": channelid
+            }
+        })
 
     @property
     def is_downloaded(self):

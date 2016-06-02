@@ -265,7 +265,7 @@ class MusicBot(discord.Client):
 
             voice_client = await self.get_voice_client(channel)
 
-            playlist = Playlist(self)
+            playlist = Playlist(self, channel.server.id)
             player = MusicPlayer(self, voice_client, playlist) \
                 .on('play', self.on_play)
 
