@@ -65,9 +65,11 @@ class Playlist(EventEmitter):
         self.redis.rpush("musicqueue:" + self.serverid, *[entry.to_json() for entry in self.entries])
         random.seed()
 
-    def clear(self):
+    def clear(self, kill=False):
         self.entries.clear()
-        self.redis.delete("musicqueue:" + self.serverid)
+
+        if not kill:
+            self.redis.delete("musicqueue:" + self.serverid)
 
     async def add_entry(self, song_url, saved=False, **meta):
         """

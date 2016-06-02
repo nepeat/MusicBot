@@ -132,7 +132,7 @@ class MusicPlayer(EventEmitter):
 
     def kill(self):
         self.state = MusicPlayerState.DEAD
-        self.playlist.clear()
+        self.playlist.clear(kill=True)
         self._events.clear()
         self._kill_current_player()
 
