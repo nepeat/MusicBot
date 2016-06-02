@@ -5,16 +5,15 @@ import os
 import random
 import traceback
 from collections import deque
-from hashlib import md5
 from itertools import islice
 
 import redis
 
-import aiohttp
 import asyncio
 from musicbot.connections import redis_pool
 from musicbot.exceptions import ExtractionError, WrongEntryTypeError
 from musicbot.lib.event_emitter import EventEmitter
+from musicbot.utils import md5sum, get_header
 
 log = logging.getLogger(__name__)
 
@@ -495,20 +494,3 @@ class PlaylistEntry:
 
     def __hash__(self):
         return id(self)
-
-
-def md5sum(filename, limit=0):
-    fhash = md5()
-    with open(filename, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            fhash.update(chunk)
-    return fhash.hexdigest()[-limit:]
-
-
-async def get_header(session, url, headerfield=None, *, timeout=5):
-    with aiohttp.Timeout(timeout):
-        async with session.head(url) as response:
-            if headerfield:
-                return response.headers.get(headerfield)
-            else:
-                return response.headers
