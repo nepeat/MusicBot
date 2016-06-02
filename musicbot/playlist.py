@@ -54,6 +54,8 @@ class Playlist(EventEmitter):
                 meta["channel"] = self.bot.get_channel(data["meta"]["channel"])
                 meta["author"] = meta["channel"].server.get_member(data["meta"]["author"])
 
+            meta["seek"] = data["meta"].get("seek", 0)
+
             asyncio.ensure_future(self.add_entry(data["url"], saved=True, **meta), loop=self.bot.loop)
 
     def shuffle(self, seed=None):
@@ -343,7 +345,8 @@ class PlaylistEntry:
             "url": self.url,
             "meta": {
                 "author": authorid,
-                "channel": channelid
+                "channel": channelid,
+                "seek": self.meta.get("seek", 0)
             }
         })
 

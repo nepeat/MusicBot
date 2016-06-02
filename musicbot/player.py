@@ -133,6 +133,7 @@ class MusicPlayer(EventEmitter):
     def kill(self):
         # Save the current entry before killing the bot.
         current = self.current_entry
+        current.meta["seek"] = self.progress
 
         self.state = MusicPlayerState.DEAD
         self.playlist.clear(kill=True, last_entry=current)
@@ -184,7 +185,6 @@ class MusicPlayer(EventEmitter):
             if self.is_stopped or _continue:
                 try:
                     entry = await self.playlist.get_next_entry()
-
                 except Exception as e:
                     print("Failed to get entry.")
                     traceback.print_exc()
@@ -200,9 +200,14 @@ class MusicPlayer(EventEmitter):
                 # In-case there was a player, kill it. RIP.
                 self._kill_current_player()
 
+                # Set the player options.
+                before_options = "-nostdin -ss {seek}".format(
+                    seek=entry.meta.get("seek", 0)
+                )
+
                 self._current_player = self._monkeypatch_player(self.voice_client.create_ffmpeg_player(
                     entry.filename,
-                    before_options="-nostdin",
+                    before_options=before_options,
                     # Threadsafe call soon, b/c after will be called from the voice playback thread.
                     after=lambda: self.loop.call_soon_threadsafe(self._playback_finished)
                 ))
