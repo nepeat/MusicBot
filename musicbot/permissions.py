@@ -52,11 +52,6 @@ class Permissions:
 
         self.groups.add(owner_group)
 
-
-    def save(self):
-        with open(self.config_file, 'w') as f:
-            self.config.write(f)
-
     def for_user(self, user):
         """
         Returns the first PermissionGroup a user belongs to
@@ -78,11 +73,6 @@ class Permissions:
                     return group
 
         return self.default_group
-
-    def create_group(self, name, **kwargs):
-        self.config.read_dict({name:kwargs})
-        self.groups.add(PermissionGroup(name, self.config[name]))
-        # TODO: Test this
 
 
 class PermissionGroup:
@@ -142,15 +132,6 @@ class PermissionGroup:
         self.instaskip = configparser.RawConfigParser.BOOLEAN_STATES.get(
             self.instaskip, PermissionsDefaults.InstaSkip
         )
-
-
-    def add_user(self, uid):
-        self.user_list.add(uid)
-
-    def remove_user(self, uid):
-        if uid in self.user_list:
-            self.user_list.pop(uid)
-
 
     def __repr__(self):
         return "<PermissionGroup: %s>" % self.name
