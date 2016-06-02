@@ -97,10 +97,10 @@ class Playlist(EventEmitter):
                 # https://github.com/KeepSafe/aiohttp/issues/758
                 # https://github.com/KeepSafe/aiohttp/issues/852
                 content_type = await get_header(self.bot.aiosession, info['url'], 'CONTENT-TYPE')
-                print("Got content type", content_type)
+                log.debug("Got content type", content_type)
 
             except Exception as e:
-                print("[Warning] Failed to get content type for url %s (%s)" % (song_url, e))
+                log.warning("Failed to get content type for url %s (%s)", song_url, e)
                 content_type = None
 
             if content_type:
@@ -109,7 +109,7 @@ class Playlist(EventEmitter):
                         raise ExtractionError("Invalid content type \"%s\" for url %s" % (content_type, song_url))
 
                 elif not content_type.startswith(('audio/', 'video/')):
-                    print("[Warning] Questionable content type \"%s\" for url %s" % (content_type, song_url))
+                    log.warning("Questionable content type \"%s\" for url %s", content_type, song_url)
 
         entry = PlaylistEntry(
             self,
@@ -167,13 +167,13 @@ class Playlist(EventEmitter):
                     baditems += 1
                     # Once I know more about what's happening here I can add a proper message
                     traceback.print_exc()
-                    print(items)
-                    print("Could not add item")
+                    log.error(items)
+                    log.error("Could not add item")
             else:
                 baditems += 1
 
         if baditems:
-            print("Skipped %s bad entries" % baditems)
+            log.info("Skipped %s bad entries", baditems)
 
         return entry_list, position
 
@@ -207,13 +207,14 @@ class Playlist(EventEmitter):
                     baditems += 1
                 except Exception as e:
                     baditems += 1
-                    print("There was an error adding the song {}: {}: {}\n".format(
-                        entry_data['id'], e.__class__.__name__, e))
+                    log.error("There was an error adding the song {}: {}: {}\n".format(
+                        entry_data['id'], e.__class__.__name__, e
+                    ))
             else:
                 baditems += 1
 
         if baditems:
-            print("Skipped %s bad entries" % baditems)
+            log.info("Skipped %s bad entries" % baditems)
 
         return gooditems
 
@@ -246,13 +247,14 @@ class Playlist(EventEmitter):
                     baditems += 1
                 except Exception as e:
                     baditems += 1
-                    print("There was an error adding the song {}: {}: {}\n".format(
-                        entry_data['id'], e.__class__.__name__, e))
+                    log.error("There was an error adding the song {}: {}: {}\n".format(
+                        entry_data['id'], e.__class__.__name__, e
+                    ))
             else:
                 baditems += 1
 
         if baditems:
-            print("Skipped %s bad entries" % baditems)
+            log.info("Skipped %s bad entries" % baditems)
 
         return gooditems
 
@@ -364,7 +366,7 @@ class PlaylistEntry:
 
             # the generic extractor requires special handling
             if extractor == 'generic':
-                # print("Handling generic")
+                log.debug("Handling generic")
                 flistdir = [f.rsplit('-', 1)[0] for f in os.listdir(self.download_folder)]
                 expected_fname_noex, fname_ex = os.path.basename(self.expected_filename).rsplit('.', 1)
 
@@ -379,18 +381,16 @@ class PlaylistEntry:
                         os.listdir(self.download_folder)[flistdir.index(expected_fname_noex)]
                     )
 
-                    # print("Resolved %s to %s" % (self.expected_filename, lfile))
+                    log.debug("Resolved %s to %s" % (self.expected_filename, lfile))
                     lsize = os.path.getsize(lfile)
-                    # print("Remote size: %s Local size: %s" % (rsize, lsize))
+                    log.debug("Remote size: %s Local size: %s" % (rsize, lsize))
 
                     if lsize != rsize:
                         await self._really_download(hash=True)
                     else:
-                        # print("[Download] Cached:", self.url)
                         self.filename = lfile
 
                 else:
-                    # print("File not found in cache (%s)" % expected_fname_noex)
                     await self._really_download(hash=True)
 
             else:
@@ -404,12 +404,12 @@ class PlaylistEntry:
 
                 if expected_fname_base in ldir:
                     self.filename = os.path.join(self.download_folder, expected_fname_base)
-                    print("[Download] Cached:", self.url)
+                    log.info("Cached:", self.url)
 
                 elif expected_fname_noex in flistdir:
-                    print("[Download] Cached (different extension):", self.url)
+                    log.info("Cached (different extension):", self.url)
                     self.filename = os.path.join(self.download_folder, ldir[flistdir.index(expected_fname_noex)])
-                    print("Expected %s, got %s" % (
+                    log.info("Expected %s, got %s" % (
                         self.expected_filename.rsplit('.', 1)[-1],
                         self.filename.rsplit('.', 1)[-1]
                     ))
@@ -429,14 +429,14 @@ class PlaylistEntry:
 
     # noinspection PyShadowingBuiltins
     async def _really_download(self, *, hash=False):
-        print("[Download] Started:", self.url)
+        log.info("Started:", self.url)
 
         try:
             result = await self.playlist.downloader.extract_info(self.playlist.loop, self.url, download=True)
         except Exception as e:
             raise ExtractionError(e)
 
-        print("[Download] Complete:", self.url)
+        log.info("Complete:", self.url)
 
         if result is None:
             raise ExtractionError("ytdl broke and hell if I know why")
