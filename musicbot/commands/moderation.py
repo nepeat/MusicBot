@@ -150,6 +150,23 @@ async def cmd_settopic(self, message, channel, leftover_args, topic):
 
 
 @owner_only
+@command("renamevoice")
+async def cmd_renamevoice(self, message, player, channelname, leftover_args):
+    """
+    Usage:
+        {command_prefix}renamevoice [name]
+
+    Changes the current voice channel's name.
+    """
+
+    channelname = " ".join([channelname, *leftover_args])
+
+    await self.edit_channel(player.voice_client.channel, name=channelname)
+
+    return Response(":ok_hand:", delete_after=20)
+
+
+@owner_only
 @command("reloadconfig")
 async def cmd_reloadconfig(bot):
     """
