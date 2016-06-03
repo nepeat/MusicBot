@@ -5,6 +5,8 @@ import sys
 import traceback
 from collections import defaultdict
 
+import redis
+
 import aiohttp
 import asyncio
 import discord
@@ -13,6 +15,7 @@ from discord.object import Object
 from discord.voice_client import VoiceClient
 from musicbot import downloader, exceptions
 from musicbot.commands import all_commands
+from musicbot.connections import redis_pool
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
 from musicbot.structures import Response, SkipState
@@ -39,6 +42,7 @@ class MusicBot(discord.Client):
 
         load_config(self)
 
+        self.redis = redis.StrictRedis(connection_pool=redis_pool)
         self.downloader = downloader.Downloader(download_folder='audio_cache')
 
         self.exit_signal = None
