@@ -34,7 +34,7 @@ class Playlist(EventEmitter):
         return iter(self.entries)
 
     def load_saved(self):
-        items = self.bot.redis.lrange("musicqueue:" + self.serverid, 0, -1)
+        items = self.bot.redis.lrange("musicbot:queue:" + self.serverid, 0, -1)
 
         for item in items:
             meta = {}
@@ -59,17 +59,17 @@ class Playlist(EventEmitter):
             random.seed(seed)
 
         random.shuffle(self.entries)
-        self.bot.redis.delete("musicqueue:" + self.serverid)
-        self.bot.redis.rpush("musicqueue:" + self.serverid, *[entry.to_json() for entry in self.entries])
+        self.bot.redis.delete("musicbot:queue:" + self.serverid)
+        self.bot.redis.rpush("musicbot:queue:" + self.serverid, *[entry.to_json() for entry in self.entries])
         random.seed()
 
     def clear(self, kill=False, last_entry=None):
         self.entries.clear()
 
         if kill and last_entry:
-            self.bot.redis.lpush("musicqueue:" + self.serverid, last_entry.to_json())
+            self.bot.redis.lpush("musicbot:queue:" + self.serverid, last_entry.to_json())
         else:
-            self.bot.redis.delete("musicqueue:" + self.serverid)
+            self.bot.redis.delete("musicbot:queue:" + self.serverid)
 
     async def add_entry(self, song_url, saved=False, **meta):
         """
@@ -263,7 +263,8 @@ class Playlist(EventEmitter):
     def _add_entry(self, entry, saved=False):
         self.entries.append(entry)
         if not saved:
-            self.bot.redis.rpush("musicqueue:" + self.serverid, entry.to_json())
+            self.bot.redis.sadd("")
+            self.bot.redis.rpush("musicbot:queue:" + self.serverid, entry.to_json())
         self.emit('entry-added', playlist=self, entry=entry)
 
         if self.peek() is entry:
@@ -280,7 +281,7 @@ class Playlist(EventEmitter):
             return None
 
         entry = self.entries.popleft()
-        self.bot.redis.lpop("musicqueue:" + self.serverid)
+        self.bot.redis.lpop("musicbot:queue:" + self.serverid)
 
         if predownload_next:
             next_entry = self.peek()
