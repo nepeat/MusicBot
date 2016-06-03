@@ -14,3 +14,4 @@ import musicbot.commands.meta
 import musicbot.commands.moderation
 import musicbot.commands.music
 import musicbot.commands.server
+import musicbot.commands.shitpost
