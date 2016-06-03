@@ -13,7 +13,7 @@ import asyncio
 from musicbot.connections import redis_pool
 from musicbot.exceptions import ExtractionError, WrongEntryTypeError
 from musicbot.lib.event_emitter import EventEmitter
-from musicbot.utils import md5sum, get_header
+from musicbot.utils import get_header, md5sum
 
 log = logging.getLogger(__name__)
 
