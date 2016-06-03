@@ -572,6 +572,9 @@ class MusicBot(discord.Client):
             if params.pop('leftover_args', None):
                 handler_kwargs['leftover_args'] = args
 
+            if params.pop('redis', None):
+                handler_kwargs['redis'] = self.redis
+
             args_expected = []
             for key, param in list(params.items()):
                 doc_key = '[%s=%s]' % (key, param.default) if param.default is not inspect.Parameter.empty else key
