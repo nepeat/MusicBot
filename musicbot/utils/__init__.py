@@ -39,7 +39,7 @@ def weighted_choice(items):
 
 def migrate_redis(redis):
     # Horribly duct tapey migrations but they work.
-    if redis.type("musicbot:played" == "set"):
+    if redis.type("musicbot:played") == "set":
         items = redis.smembers("musicbot:played")
         redis.delete("musicbot:played")
         redis.hmset("musicbot:played", {key: 1 for key in items})
