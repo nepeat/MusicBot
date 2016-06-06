@@ -3,6 +3,9 @@ from musicbot.config import Config, ConfigDefaults
 from musicbot.permissions import Permissions, PermissionsDefaults
 import hashlib
 import aiohttp
+import itertools
+import bisect
+import random
 
 
 def sane_round_int(x):
@@ -22,6 +25,16 @@ def md5sum(filename, limit=0):
     return fhash.hexdigest()[-limit:]
 
 
+def weighted_choice(items):
+    if isinstance(items, dict):
+        choices, weights = zip(*items.items())
+    else:
+        choices, weights = zip(*items)
+
+    cumdist = list(itertools.accumulate(weights))
+    choice = random.random() * cumdist[-1]
+
+    return choices[bisect.bisect(cumdist, choice)]
 async def get_header(session, url, headerfield=None, *, timeout=5):
     with aiohttp.Timeout(timeout):
         async with session.head(url) as response:
