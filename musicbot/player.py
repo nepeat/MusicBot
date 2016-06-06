@@ -266,7 +266,10 @@ class MusicPlayer(EventEmitter):
 
     @property
     def progress(self):
-        return round(self._current_player.buff.frame_count * 0.02)
+        if hasattr(self._current_player, "buff"):
+            return round(self._current_player.buff.frame_count * 0.02)
+        else:
+            return 0
         # TODO: Properly implement this
         #       Correct calculation should be bytes_read/192k
         #       192k AKA sampleRate * (bitDepth / 8) * channelCount
