@@ -379,14 +379,14 @@ class MusicBot(discord.Client):
     def run(self):
         try:
             self.loop.run_until_complete(self.start(*self.config.auth))
-
         except discord.errors.LoginFailure:
             # Add if token, else
             raise exceptions.HelpfulError(
                 "Bot cannot login, bad credentials.",
                 "Fix your Token in the options file.  "
                 "Remember that each field should be on their own line.")
-
+        except KeyboardInterrupt:
+            pass
         finally:
             try:
                 self._cleanup()
