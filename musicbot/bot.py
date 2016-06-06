@@ -19,7 +19,7 @@ from musicbot.connections import redis_pool
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
 from musicbot.structures import Response, SkipState
-from musicbot.utils import load_config
+from musicbot.utils import load_config, migrate_redis
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -43,6 +43,8 @@ class MusicBot(discord.Client):
         load_config(self)
 
         self.redis = redis.StrictRedis(connection_pool=redis_pool)
+        migrate_redis(self.redis)
+
         self.downloader = downloader.Downloader(download_folder='audio_cache')
 
         self.exit_signal = None

@@ -263,7 +263,7 @@ class Playlist(EventEmitter):
     def _add_entry(self, entry, saved=False):
         self.entries.append(entry)
         if not saved:
-            self.bot.redis.sadd("musicbot:played", entry.url)
+            self.bot.redis.hincrby("musicbot:played", entry.url, 1)
             self.bot.redis.rpush("musicbot:queue:" + self.serverid, entry.to_json())
         self.emit('entry-added', playlist=self, entry=entry)
 

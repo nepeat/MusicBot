@@ -1,11 +1,13 @@
 from musicbot.commands import command
 from musicbot.commands.music import cmd_play
 from musicbot.structures import Response
+from musicbot.utils import weighted_choice
 
 
 @command("surprise")
 async def cmd_surprise(self, player, channel, author, permissions, redis):
-    url = redis.srandmember("musicbot:played")
+    urls = redis.hgetall("musicbot:played")
+    url = weighted_choice(urls)
 
     if url:
         return await cmd_play(self, player, channel, author, permissions, None, url)

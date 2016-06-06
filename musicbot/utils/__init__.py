@@ -35,6 +35,16 @@ def weighted_choice(items):
     choice = random.random() * cumdist[-1]
 
     return choices[bisect.bisect(cumdist, choice)]
+
+
+def migrate_redis(redis):
+    # Horribly duct tapey migrations but they work.
+    if redis.type("musicbot:played" == "set"):
+        items = redis.smembers("musicbot:played")
+        redis.delete("musicbot:played")
+        redis.hmset("musicbot:played", {key: 1 for key in items})
+
+
 async def get_header(session, url, headerfield=None, *, timeout=5):
     with aiohttp.Timeout(timeout):
         async with session.head(url) as response:
