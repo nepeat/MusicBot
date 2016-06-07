@@ -31,6 +31,9 @@ def weighted_choice(items):
     else:
         choices, weights = zip(*items)
 
+    # Ensure that the weights are integrers if they are bytes or strings.
+    weights = [int(x) for x in weights]
+
     cumdist = list(itertools.accumulate(weights))
     choice = random.random() * cumdist[-1]
 
