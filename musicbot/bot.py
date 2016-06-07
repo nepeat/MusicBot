@@ -10,6 +10,7 @@ import redis
 import aiohttp
 import asyncio
 import discord
+import raven
 from discord.enums import ChannelType
 from discord.object import Object
 from discord.voice_client import VoiceClient
@@ -33,6 +34,8 @@ log = logging.getLogger(__name__)
 class MusicBot(discord.Client):
     def __init__(self):
         super().__init__()
+
+        self.sentry = raven.Client(dsn=os.environ.get("SENTRY_DSN", None))
 
         self.players = {}
         self.the_voice_clients = {}
@@ -410,12 +413,11 @@ class MusicBot(discord.Client):
 
             await asyncio.sleep(2)  # don't ask
             await self.logout()
-
         elif issubclass(ex_type, exceptions.Signal):
             self.exit_signal = ex_type
             await self.logout()
-
         else:
+            self.sentry.captureException()
             traceback.print_exc()
 
     async def on_ready(self):
@@ -649,6 +651,7 @@ class MusicBot(discord.Client):
 
         except Exception:
             traceback.print_exc()
+            self.sentry.captureException()
             await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
 
     async def on_voice_state_update(self, before, after):
