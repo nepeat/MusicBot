@@ -92,6 +92,18 @@ class MusicPlayer(EventEmitter):
         if self.is_stopped:
             self.loop.call_later(2, self.play)
 
+    def seek(self, time=None):
+        if time < 0:
+            raise ValueError("Cannot seek past negative numbers.")
+
+        entry = self._current_entry
+
+        if entry:
+            entry.meta["seek"] = time
+            entry.meta["quiet"] = True
+            self.playlist.entries.appendleft(entry)
+            self._kill_current_player()
+
     def skip(self):
         self._kill_current_player()
 
@@ -220,7 +232,8 @@ class MusicPlayer(EventEmitter):
                 self._current_entry = entry
 
                 self._current_player.start()
-                self.emit('play', player=self, entry=entry)
+                if not entry.meta.get("quiet", False):
+                    self.emit('play', player=self, entry=entry)
 
     def _monkeypatch_player(self, player):
         original_buff = player.buff

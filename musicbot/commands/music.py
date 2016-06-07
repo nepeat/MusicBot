@@ -703,3 +703,30 @@ async def cmd_queue(self, channel, player, sendas=None):
             )
 
     return Response(message, delete_after=30)
+
+
+@command("seek")
+async def cmd_seek(self, message, player, seek=None):
+    """
+    Usage:
+        {command_prefix}seek [seconds]
+
+    Seeks the player to a specific time in seconds.
+    """
+
+    if player.is_stopped:
+        raise CommandError("Can't seek! The player is not playing!", expire_in=20)
+
+    if not seek:
+        return Response('A time is required to seek.', reply=True, delete_after=20)
+
+    try:
+        seek = int(seek.strip())
+        if seek < 0:
+            raise ValueError()
+    except ValueError:
+        return Response('The time you have given is an invalid number.', reply=True, delete_after=20)
+
+    player.seek(seek)
+
+    return Response('Seeked to %d seconds!' % (seek), delete_after=20)
