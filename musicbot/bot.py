@@ -62,16 +62,6 @@ class MusicBot(discord.Client):
     def _fixg(x, dp=2):
         return ('{:.%sf}' % dp).format(x).rstrip('0').rstrip('.')
 
-    def _get_variable(self, name):
-        stack = inspect.stack()
-        try:
-            for frames in stack:
-                current_locals = frames[0].f_locals
-                if name in current_locals:
-                    return current_locals[name]
-        finally:
-            del stack
-
     def _get_owner(self, voice=False):
         if voice:
             for server in self.servers:
@@ -276,14 +266,14 @@ class MusicBot(discord.Client):
 
             playlist = Playlist(self, channel.server.id)
             player = MusicPlayer(self, voice_client, playlist) \
-                .on('play', self.on_play)
+                .on('play', self.on_player_play)
 
             player.skip_state = SkipState()
             self.players[server.id] = player
 
         return self.players[server.id]
 
-    async def on_play(self, player, entry):
+    async def on_player_play(self, player, entry):
         player.skip_state.reset()
 
         channel = entry.meta.get('channel', None)
@@ -419,6 +409,10 @@ class MusicBot(discord.Client):
         else:
             self.sentry.captureException()
             traceback.print_exc()
+
+    async def on_resumed(self):
+        for vc in self.the_voice_clients.values():
+            vc.main_ws = self.ws
 
     async def on_ready(self):
         log.info('Connected!')

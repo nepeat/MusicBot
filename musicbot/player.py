@@ -93,10 +93,16 @@ class MusicPlayer(EventEmitter):
             self.loop.call_later(2, self.play)
 
     def seek(self, time=None):
+        entry = self._current_entry
+
+        if not entry:
+            return
+
         if time < 0:
             raise ValueError("Cannot seek past negative numbers.")
 
-        entry = self._current_entry
+        if (time > entry.duration) and entry.duration != 0:
+            raise ValueError("Seek length is longer than the video.")
 
         if entry:
             entry.meta["seek"] = time

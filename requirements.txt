@@ -3,3 +3,4 @@ youtube_dl >= 2016.4.24
 redis
 hiredis
 raven
+pytimeparse

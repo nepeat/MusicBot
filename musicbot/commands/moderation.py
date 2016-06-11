@@ -7,13 +7,14 @@ from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
                                  TerminateSignal)
 from musicbot.structures import Response
 from musicbot.utils import load_config
+from discord.ext.commands.bot import _get_variable
 
 
 def owner_only(func):
     @wraps(func)
     async def wrapper(self, *args, **kwargs):
         # Only allow the owner to use these commands
-        orig_msg = self._get_variable('message')
+        orig_msg = _get_variable('message')
 
         if not orig_msg or orig_msg.author.id == self.config.owner_id:
             return await func(self, *args, **kwargs)

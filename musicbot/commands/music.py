@@ -7,6 +7,7 @@ from io import BytesIO
 from textwrap import dedent
 
 import asyncio
+import pytimeparse
 from musicbot.commands import command
 from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
 from musicbot.exceptions import (CommandError, PermissionsError,
@@ -706,7 +707,7 @@ async def cmd_queue(self, channel, player, sendas=None):
 
 
 @command("seek")
-async def cmd_seek(self, message, player, seek=None):
+async def cmd_seek(self, message, player, leftover_args, seek=None):
     """
     Usage:
         {command_prefix}seek [seconds]
@@ -721,12 +722,24 @@ async def cmd_seek(self, message, player, seek=None):
         return Response('A time is required to seek.', reply=True, delete_after=20)
 
     try:
-        seek = int(seek.strip())
+        original_seek = seek
+
+        seek = ' '.join([seek, *leftover_args])
+        seek = pytimeparse.parse(seek)
+
+        if not seek:
+            seek = int(original_seek)
+
         if seek < 0:
             raise ValueError()
-    except ValueError:
-        return Response('The time you have given is an invalid number.', reply=True, delete_after=20)
+    except (TypeError, ValueError):
+        return Response('The time you have given is invalid.', reply=True, delete_after=20)
 
-    player.seek(seek)
+    try:
+        player.seek(seek)
+    except ValueError as e:
+        return Response(str(e), delete_after=20)
 
-    return Response('Seeked to %d seconds!' % (seek), delete_after=20)
+    return Response('Seeked video to %s!' % (
+        str(timedelta(seconds=seek)).lstrip('0').lstrip(':')
+    ), delete_after=20)
