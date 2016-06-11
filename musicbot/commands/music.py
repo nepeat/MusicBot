@@ -547,7 +547,7 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
             log.info("Something strange is happening.  "
                   "You might want to restart the bot if it doesn't start working.")
 
-    if author.id == self.config.owner_id or permissions.instaskip:
+    if permissions.instaskip:
         player.skip()
         await self._manual_delete_check(message)
         return
@@ -556,7 +556,7 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
     # Currently is recounted if they vote, deafen, then vote
 
     num_voice = sum(1 for m in voice_channel.voice_members if not (
-        m.deaf or m.self_deaf or m.id in [self.config.owner_id, self.user.id]))
+        m.deaf or m.self_deaf or m.id in [self.user.id]))
 
     num_skips = player.skip_state.add_skipper(author.id, message)
 
