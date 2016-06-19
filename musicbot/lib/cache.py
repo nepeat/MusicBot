@@ -58,9 +58,9 @@ def make_key_generator(namespace, fn, value_mangler=str, arg_blacklist=(
     return generate_key
 
 redis_config = {
-    'host': [os.environ.get("REDIS_HOST", "localhost")],
+    'host': os.environ.get("REDIS_HOST", "localhost"),
     'port': int(os.environ.get("REDIS_PORT", 6379)),
-    'db': '1',
+    'db': 1,
     'redis_expiration_time': 60 * 60 * 24 * 7,  # 1 week
     'distributed_lock': True
 }
