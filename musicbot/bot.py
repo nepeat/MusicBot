@@ -48,7 +48,7 @@ class MusicBot(discord.Client):
         self.redis = redis.StrictRedis(connection_pool=redis_pool)
         migrate_redis(self.redis)
 
-        self.downloader = downloader.Downloader(download_folder='audio_cache')
+        self.downloader = downloader.Downloader(self, download_folder='audio_cache')
 
         self.exit_signal = None
 

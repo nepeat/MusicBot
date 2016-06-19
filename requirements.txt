@@ -4,4 +4,3 @@ redis
 hiredis
 raven
 pytimeparse
-dogpile.cache

@@ -2,10 +2,9 @@ import functools
 import os
 
 import youtube_dl
-
+import json
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from musicbot.lib.cache import downloader as cache
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -35,7 +34,8 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 '''
 
 class Downloader:
-    def __init__(self, download_folder=None):
+    def __init__(self, bot, download_folder=None):
+        self.bot = bot
         self.thread_pool = ThreadPoolExecutor(max_workers=2)
         self.unsafe_ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
         self.safe_ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
@@ -54,17 +54,35 @@ class Downloader:
     def ytdl(self):
         return self.safe_ytdl
 
-    @cache.cache_on_arguments()
+    def set_cache(self, url, data):
+        self.bot.redis.set("musicbot:cache:" + url, json.dumps(data))
+        self.bot.redis.expire("musicbot:cache:" + url, 60 * 60 * 24 * 7)
+
+    def get_cache(self, url):
+        if not self.bot.redis.exists("musicbot:cache:" + url):
+            return None
+
+        try:
+            return json.loads(self.bot.redis.get("musicbot:cache:" + url))
+        except json.JSONDecodeError:
+            return None
+
     async def extract_info(self, loop, *args, on_error=None, retry_on_error=False, **kwargs):
         """
             Runs ytdl.extract_info within the threadpool. Returns a future that will fire when it's done.
             If `on_error` is passed and an exception is raised, the exception will be caught and passed to
             on_error as an argument.
         """
+
+        info = self.get_cache(args[0])
+        if info:
+            return info
+
         if callable(on_error):
             try:
-                return await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
-
+                info = await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
+                self.set_cache(args[0], info)
+                return info
             except Exception as e:
 
                 # (youtube_dl.utils.ExtractorError, youtube_dl.utils.DownloadError)
@@ -81,8 +99,15 @@ class Downloader:
                 if retry_on_error:
                     return await self.safe_extract_info(loop, *args, **kwargs)
         else:
-            return await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
+            info = await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
+            self.set_cache(args[0], info)
+            return info
 
-    @cache.cache_on_arguments()
     async def safe_extract_info(self, loop, *args, **kwargs):
-        return await loop.run_in_executor(self.thread_pool, functools.partial(self.safe_ytdl.extract_info, *args, **kwargs))
+        info = self.get_cache(args[0])
+        if info:
+            return info
+
+        info = await loop.run_in_executor(self.thread_pool, functools.partial(self.safe_ytdl.extract_info, *args, **kwargs))
+        self.set_cache(args[0], info)
+        return info

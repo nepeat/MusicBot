@@ -46,6 +46,15 @@ class Playlist(EventEmitter):
                 log.error(item)
                 continue
 
+            # Fix for the to_dict() returning json derp.
+            if isinstance(data, str):
+                try:
+                    data = json.loads(data)
+                except json.JSONDecodeError as e:
+                    log.error(e)
+                    log.error(data)
+                    continue
+
             if "channel" in data["meta"] and "author" in data["meta"]:
                 meta["channel"] = self.bot.get_channel(data["meta"]["channel"])
                 meta["author"] = meta["channel"].server.get_member(data["meta"]["author"])
@@ -67,7 +76,7 @@ class Playlist(EventEmitter):
         self.entries.clear()
 
         if kill and last_entry:
-            self.bot.redis.lpush("musicbot:queue:" + self.serverid, entry.to_json())
+            self.bot.redis.lpush("musicbot:queue:" + self.serverid, last_entry.to_json())
         else:
             self.bot.redis.delete("musicbot:queue:" + self.serverid)
 
