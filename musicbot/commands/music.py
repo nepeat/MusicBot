@@ -39,6 +39,12 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
     if leftover_args:
         song_url = ' '.join([song_url, *leftover_args])
 
+    if song_url.startswith("prepend:"):
+        song_url = song_url.lstrip("prepend:")
+        prepend = True
+    else:
+        prepend = False
+
     try:
         info = await self.downloader.extract_info(player.playlist.loop, song_url, download=False, process=False)
     except Exception as e:
@@ -175,7 +181,7 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
             )
 
         try:
-            entry, position = await player.playlist.add_entry(song_url, channel=channel, author=author)
+            entry, position = await player.playlist.add_entry(song_url, channel=channel, author=author, prepend=prepend)
 
         except WrongEntryTypeError as e:
             if e.use_url == song_url:
