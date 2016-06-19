@@ -60,14 +60,14 @@ class Playlist(EventEmitter):
 
         random.shuffle(self.entries)
         self.bot.redis.delete("musicbot:queue:" + self.serverid)
-        self.bot.redis.rpush("musicbot:queue:" + self.serverid, *[json.dumps(entry.to_dict()) for entry in self.entries])
+        self.bot.redis.rpush("musicbot:queue:" + self.serverid, *[entry.to_json() for entry in self.entries])
         random.seed()
 
     def clear(self, kill=False, last_entry=None):
         self.entries.clear()
 
         if kill and last_entry:
-            self.bot.redis.lpush("musicbot:queue:" + self.serverid, json.dumps(last_entry.to_dict()))
+            self.bot.redis.lpush("musicbot:queue:" + self.serverid, entry.to_json())
         else:
             self.bot.redis.delete("musicbot:queue:" + self.serverid)
 
@@ -269,9 +269,9 @@ class Playlist(EventEmitter):
         if not saved:
             self.bot.redis.hincrby("musicbot:played", entry.url, 1)
             if prepend:
-                self.bot.redis.lpush("musicbot:queue:" + self.serverid, json.dumps(entry.to_dict()))
+                self.bot.redis.lpush("musicbot:queue:" + self.serverid, entry.to_json())
             else:
-                self.bot.redis.rpush("musicbot:queue:" + self.serverid, json.dumps(entry.to_dict()))
+                self.bot.redis.rpush("musicbot:queue:" + self.serverid, entry.to_json())
         self.emit('entry-added', playlist=self, entry=entry)
 
         if self.peek() is entry:
@@ -334,7 +334,7 @@ class PlaylistEntry:
         self._waiting_futures = []
         self.download_folder = self.playlist.downloader.download_folder
 
-    def to_dict(self):
+    def to_json(self):
         author = self.meta.get("author", None)
         channel = self.meta.get("channel", None)
 
