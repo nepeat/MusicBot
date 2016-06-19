@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import os
+import pickle
 import random
 import traceback
 from collections import deque
@@ -42,8 +43,13 @@ class Playlist(EventEmitter):
             try:
                 data = json.loads(item)
             except json.JSONDecodeError as e:
-                log.error(e)
-                log.error(item)
+                try:
+                    data = pickle.loads(item)
+                    self._add_entry(data, True)
+                except pickle.PickleError as e:
+                    log.error(e)
+                    log.error(item)
+
                 continue
 
             if "channel" in data["meta"] and "author" in data["meta"]:
@@ -60,14 +66,14 @@ class Playlist(EventEmitter):
 
         random.shuffle(self.entries)
         self.bot.redis.delete("musicbot:queue:" + self.serverid)
-        self.bot.redis.rpush("musicbot:queue:" + self.serverid, *[entry.to_json() for entry in self.entries])
+        self.bot.redis.rpush("musicbot:queue:" + self.serverid, *[pickle.dump(entry) for entry in self.entries])
         random.seed()
 
     def clear(self, kill=False, last_entry=None):
         self.entries.clear()
 
         if kill and last_entry:
-            self.bot.redis.lpush("musicbot:queue:" + self.serverid, last_entry.to_json())
+            self.bot.redis.lpush("musicbot:queue:" + self.serverid, pickle.dump(last_entry))
         else:
             self.bot.redis.delete("musicbot:queue:" + self.serverid)
 
@@ -260,11 +266,15 @@ class Playlist(EventEmitter):
 
         return gooditems
 
-    def _add_entry(self, entry, saved=False):
-        self.entries.append(entry)
+    def _add_entry(self, entry, saved=False, prepend=False):
+        if prepend:
+            self.entries.appendleft(entry)
+        else:
+            self.entries.append(entry)
+
         if not saved:
             self.bot.redis.hincrby("musicbot:played", entry.url, 1)
-            self.bot.redis.rpush("musicbot:queue:" + self.serverid, entry.to_json())
+            self.bot.redis.rpush("musicbot:queue:" + self.serverid, pickle.dump(entry))
         self.emit('entry-added', playlist=self, entry=entry)
 
         if self.peek() is entry:
@@ -327,7 +337,7 @@ class PlaylistEntry:
         self._waiting_futures = []
         self.download_folder = self.playlist.downloader.download_folder
 
-    def to_json(self):
+    def to_dict(self):
         author = self.meta.get("author", None)
         channel = self.meta.get("channel", None)
 
