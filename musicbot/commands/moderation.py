@@ -2,12 +2,12 @@ from functools import wraps
 
 import aiohttp
 from discord import Game
+from discord.ext.commands.bot import _get_variable
 from musicbot.commands import command
 from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
                                  TerminateSignal)
 from musicbot.structures import Response
 from musicbot.utils import load_config
-from discord.ext.commands.bot import _get_variable
 
 
 def owner_only(func):
