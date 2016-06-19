@@ -5,6 +5,7 @@ import youtube_dl
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from musicbot.lib.cache import downloader as cache
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -49,11 +50,11 @@ class Downloader:
             otmpl = self.safe_ytdl.params['outtmpl']
             self.safe_ytdl.params['outtmpl'] = os.path.join(download_folder, otmpl)
 
-
     @property
     def ytdl(self):
         return self.safe_ytdl
 
+    @cache.cache_on_arguments()
     async def extract_info(self, loop, *args, on_error=None, retry_on_error=False, **kwargs):
         """
             Runs ytdl.extract_info within the threadpool. Returns a future that will fire when it's done.
@@ -82,5 +83,6 @@ class Downloader:
         else:
             return await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
 
+    @cache.cache_on_arguments()
     async def safe_extract_info(self, loop, *args, **kwargs):
         return await loop.run_in_executor(self.thread_pool, functools.partial(self.safe_ytdl.extract_info, *args, **kwargs))
