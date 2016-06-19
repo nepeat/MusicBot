@@ -101,13 +101,13 @@ class MusicBot(discord.Client):
 
                     joined_servers.append(channel.server)
                 except Exception as e:
-                    log.error("Failed to join", channel.name)
+                    log.error("Failed to join %s", channel.name)
 
             elif channel:
                 log.info("Not joining %s on %s, that's a text channel." % (channel.name, channel.server.name))
 
             else:
-                log.info("Invalid channel thing: " + channel)
+                log.info("Invalid channel thing: %s", channel)
 
     async def _wait_delete_msg(self, message, after):
         await asyncio.sleep(after)
