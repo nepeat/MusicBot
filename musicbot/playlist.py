@@ -2,7 +2,6 @@ import datetime
 import json
 import logging
 import os
-import pickle
 import random
 import traceback
 from collections import deque
@@ -43,13 +42,8 @@ class Playlist(EventEmitter):
             try:
                 data = json.loads(item)
             except json.JSONDecodeError as e:
-                try:
-                    data = pickle.loads(item)
-                    self._add_entry(data, True)
-                except pickle.PickleError as e:
-                    log.error(e)
-                    log.error(item)
-
+                log.error(e)
+                log.error(item)
                 continue
 
             if "channel" in data["meta"] and "author" in data["meta"]:
@@ -66,18 +60,18 @@ class Playlist(EventEmitter):
 
         random.shuffle(self.entries)
         self.bot.redis.delete("musicbot:queue:" + self.serverid)
-        self.bot.redis.rpush("musicbot:queue:" + self.serverid, *[pickle.dump(entry) for entry in self.entries])
+        self.bot.redis.rpush("musicbot:queue:" + self.serverid, *[json.dumps(entry.to_dict()) for entry in self.entries])
         random.seed()
 
     def clear(self, kill=False, last_entry=None):
         self.entries.clear()
 
         if kill and last_entry:
-            self.bot.redis.lpush("musicbot:queue:" + self.serverid, pickle.dump(last_entry))
+            self.bot.redis.lpush("musicbot:queue:" + self.serverid, json.dumps(last_entry.to_dict()))
         else:
             self.bot.redis.delete("musicbot:queue:" + self.serverid)
 
-    async def add_entry(self, song_url, saved=False, **meta):
+    async def add_entry(self, song_url, saved=False, prepend=False, **meta):
         """
             Validates and adds a song_url to be played. This does not start the download of the song.
 
@@ -127,7 +121,7 @@ class Playlist(EventEmitter):
             self.downloader.ytdl.prepare_filename(info),
             **meta
         )
-        self._add_entry(entry, saved)
+        self._add_entry(entry, saved, prepend)
         return entry, len(self.entries)
 
     async def import_from(self, playlist_url, **meta):
@@ -274,7 +268,10 @@ class Playlist(EventEmitter):
 
         if not saved:
             self.bot.redis.hincrby("musicbot:played", entry.url, 1)
-            self.bot.redis.rpush("musicbot:queue:" + self.serverid, pickle.dump(entry))
+            if prepend:
+                self.bot.redis.lpush("musicbot:queue:" + self.serverid, json.dumps(entry.to_dict()))
+            else:
+                self.bot.redis.rpush("musicbot:queue:" + self.serverid, json.dumps(entry.to_dict()))
         self.emit('entry-added', playlist=self, entry=entry)
 
         if self.peek() is entry:
