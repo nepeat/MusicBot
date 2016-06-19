@@ -52,7 +52,7 @@ class MusicBot(discord.Client):
 
         self.exit_signal = None
 
-        self.headers['user-agent'] += ' MusicBot/MODIFIED'
+        self.http.user_agent += ' MusicBot/MODIFIED'
 
         # TODO: Do these properly
         ssd_defaults = {'last_np_msg': None}
