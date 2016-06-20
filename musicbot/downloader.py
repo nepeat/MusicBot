@@ -1,10 +1,13 @@
 import functools
+import json
 import os
 
+import redis
 import youtube_dl
-import json
+
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from musicbot.connections import redis_pool
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -34,8 +37,8 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 '''
 
 class Downloader:
-    def __init__(self, bot, download_folder=None):
-        self.bot = bot
+    def __init__(self, download_folder=None):
+        self.redis = redis.StrictRedis(connection_pool=redis_pool)
         self.thread_pool = ThreadPoolExecutor(max_workers=4)
         self.unsafe_ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
         self.safe_ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
@@ -64,7 +67,7 @@ class Downloader:
         if "process" in kwargs and kwargs["process"] is True:
             cachekey += ":processed"
 
-        self.bot.redis.setex(cachekey, 60 * 60 * 24 * 7, json.dumps(data))
+        self.redis.setex(cachekey, 60 * 60 * 24 * 7, json.dumps(data))
 
     def get_cache(self, url, **kwargs):
         cachekey = "musicbot:cache:" + url
@@ -76,11 +79,11 @@ class Downloader:
         if "process" in kwargs and kwargs["process"] is True:
             cachekey += ":processed"
 
-        if not self.bot.redis.exists(cachekey):
+        if not self.redis.exists(cachekey):
             return None
 
         try:
-            return json.loads(self.bot.redis.get(cachekey))
+            return json.loads(self.redis.get(cachekey))
         except json.JSONDecodeError:
             return None
 

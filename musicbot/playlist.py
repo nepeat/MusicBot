@@ -7,7 +7,10 @@ import traceback
 from collections import deque
 from itertools import islice
 
+import redis
+
 import asyncio
+from musicbot.connections import redis_pool
 from musicbot.exceptions import ExtractionError, WrongEntryTypeError
 from musicbot.lib.event_emitter import EventEmitter
 from musicbot.utils import get_header, md5sum
@@ -24,6 +27,7 @@ class Playlist(EventEmitter):
         super().__init__()
         self.bot = bot
         self.serverid = serverid
+        self.redis = redis.StrictRedis(connection_pool=redis_pool)
         self.loop = bot.loop
         self.downloader = bot.downloader
         self.entries = deque()
@@ -34,7 +38,7 @@ class Playlist(EventEmitter):
         return iter(self.entries)
 
     def load_saved(self):
-        items = self.bot.redis.lrange("musicbot:queue:" + self.serverid, 0, -1)
+        items = self.redis.lrange("musicbot:queue:" + self.serverid, 0, -1)
 
         for item in items:
             meta = {}
@@ -68,17 +72,17 @@ class Playlist(EventEmitter):
             random.seed(seed)
 
         random.shuffle(self.entries)
-        self.bot.redis.delete("musicbot:queue:" + self.serverid)
-        self.bot.redis.rpush("musicbot:queue:" + self.serverid, *[entry.to_json() for entry in self.entries])
+        self.redis.delete("musicbot:queue:" + self.serverid)
+        self.redis.rpush("musicbot:queue:" + self.serverid, *[entry.to_json() for entry in self.entries])
         random.seed()
 
     def clear(self, kill=False, last_entry=None):
         self.entries.clear()
 
         if kill and last_entry:
-            self.bot.redis.lpush("musicbot:queue:" + self.serverid, last_entry.to_json())
+            self.redis.lpush("musicbot:queue:" + self.serverid, last_entry.to_json())
         else:
-            self.bot.redis.delete("musicbot:queue:" + self.serverid)
+            self.redis.delete("musicbot:queue:" + self.serverid)
 
     async def add_entry(self, song_url, saved=False, prepend=False, **meta):
         """
@@ -276,11 +280,11 @@ class Playlist(EventEmitter):
             self.entries.append(entry)
 
         if not saved:
-            self.bot.redis.hincrby("musicbot:played", entry.url, 1)
+            self.redis.hincrby("musicbot:played", entry.url, 1)
             if prepend:
-                self.bot.redis.lpush("musicbot:queue:" + self.serverid, entry.to_json())
+                self.redis.lpush("musicbot:queue:" + self.serverid, entry.to_json())
             else:
-                self.bot.redis.rpush("musicbot:queue:" + self.serverid, entry.to_json())
+                self.redis.rpush("musicbot:queue:" + self.serverid, entry.to_json())
         self.emit('entry-added', playlist=self, entry=entry)
 
         if self.peek() is entry:
@@ -297,7 +301,7 @@ class Playlist(EventEmitter):
             return None
 
         entry = self.entries.popleft()
-        self.bot.redis.lpop("musicbot:queue:" + self.serverid)
+        self.redis.lpop("musicbot:queue:" + self.serverid)
 
         if predownload_next:
             next_entry = self.peek()
