@@ -54,16 +54,33 @@ class Downloader:
     def ytdl(self):
         return self.safe_ytdl
 
-    def set_cache(self, url, data):
-        self.bot.redis.set("musicbot:cache:" + url, json.dumps(data))
-        self.bot.redis.expire("musicbot:cache:" + url, 60 * 60 * 24 * 7)
+    def set_cache(self, url, data, **kwargs):
+        cachekey = "musicbot:cache:" + url
 
-    def get_cache(self, url):
-        if not self.bot.redis.exists("musicbot:cache:" + url):
+        # Do not cache searches on YouTube.
+        if "url" in data and data["url"].startswith("ytsearch"):
+            return None
+
+        if "process" in kwargs and kwargs["process"] is True:
+            cachekey += ":processed"
+
+        self.bot.redis.setex(cachekey, 60 * 60 * 24 * 7, json.dumps(data))
+
+    def get_cache(self, url, **kwargs):
+        cachekey = "musicbot:cache:" + url
+
+        # Don't hit the cache if we are downloading the video.
+        if "download" in kwargs and kwargs["download"] is True:
+            return None
+
+        if "process" in kwargs and kwargs["process"] is True:
+            cachekey += ":processed"
+
+        if not self.bot.redis.exists(cachekey):
             return None
 
         try:
-            return json.loads(self.bot.redis.get("musicbot:cache:" + url))
+            return json.loads(self.bot.redis.get(cachekey))
         except json.JSONDecodeError:
             return None
 
@@ -74,14 +91,14 @@ class Downloader:
             on_error as an argument.
         """
 
-        info = self.get_cache(args[0])
+        info = self.get_cache(args[0], **kwargs)
         if info:
             return info
 
         if callable(on_error):
             try:
                 info = await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
-                self.set_cache(args[0], info)
+                self.set_cache(args[0], info, **kwargs)
                 return info
             except Exception as e:
 
@@ -100,14 +117,14 @@ class Downloader:
                     return await self.safe_extract_info(loop, *args, **kwargs)
         else:
             info = await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
-            self.set_cache(args[0], info)
+            self.set_cache(args[0], info, **kwargs)
             return info
 
     async def safe_extract_info(self, loop, *args, **kwargs):
-        info = self.get_cache(args[0])
+        info = self.get_cache(args[0], **kwargs)
         if info:
             return info
 
         info = await loop.run_in_executor(self.thread_pool, functools.partial(self.safe_ytdl.extract_info, *args, **kwargs))
-        self.set_cache(args[0], info)
+        self.set_cache(args[0], info, **kwargs)
         return info
