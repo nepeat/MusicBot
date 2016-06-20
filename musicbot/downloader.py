@@ -36,7 +36,7 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 class Downloader:
     def __init__(self, bot, download_folder=None):
         self.bot = bot
-        self.thread_pool = ThreadPoolExecutor(max_workers=2)
+        self.thread_pool = ThreadPoolExecutor(max_workers=4)
         self.unsafe_ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
         self.safe_ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
         self.safe_ytdl.params['ignoreerrors'] = True
@@ -91,14 +91,14 @@ class Downloader:
             on_error as an argument.
         """
 
-        info = self.get_cache(args[0], **kwargs)
+        info = await loop.run_in_executor(self.thread_pool, functools.partial(self.get_cache, args[0], **kwargs))
         if info:
             return info
 
         if callable(on_error):
             try:
                 info = await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
-                self.set_cache(args[0], info, **kwargs)
+                loop.run_in_executor(self.thread_pool, functools.partial(self.set_cache, args[0], info, **kwargs))
                 return info
             except Exception as e:
 
@@ -117,14 +117,14 @@ class Downloader:
                     return await self.safe_extract_info(loop, *args, **kwargs)
         else:
             info = await loop.run_in_executor(self.thread_pool, functools.partial(self.unsafe_ytdl.extract_info, *args, **kwargs))
-            self.set_cache(args[0], info, **kwargs)
+            loop.run_in_executor(self.thread_pool, functools.partial(self.set_cache, args[0], info, **kwargs))
             return info
 
     async def safe_extract_info(self, loop, *args, **kwargs):
-        info = self.get_cache(args[0], **kwargs)
+        info = await loop.run_in_executor(self.thread_pool, functools.partial(self.get_cache, args[0], **kwargs))
         if info:
             return info
 
         info = await loop.run_in_executor(self.thread_pool, functools.partial(self.safe_ytdl.extract_info, *args, **kwargs))
-        self.set_cache(args[0], info, **kwargs)
+        loop.run_in_executor(self.thread_pool, functools.partial(self.set_cache, args[0], info, **kwargs))
         return info
