@@ -10,6 +10,7 @@ discord.log
 config/options.ini
 config/permissions.ini
 .env
+env/
 
 *.exe
 *.dll
