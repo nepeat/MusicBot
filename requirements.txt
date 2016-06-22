@@ -4,3 +4,4 @@ redis
 hiredis
 raven
 pytimeparse
+billboard.py
