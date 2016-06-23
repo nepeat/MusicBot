@@ -23,15 +23,18 @@ def cache_billboard(redis):
 
     redis.setex("musicbot:chart:billboard", 86400, "1")
 
+
 async def cache_soundcloud(redis, session):
     if redis.exists("musicbot:chart:soundcloud"):
         return
 
     with aiohttp.Timeout(10):
-        async with session.get("https://api-v2.soundcloud.com/charts?kind=top&genre=soundcloud:genres:all-music&client_id=02gUJC0hH2ct1EGOcYXQIzRFU91c72Ea&limit=20&offset=0&linked_partitioning=1") as response:
+        async with session.get("https://api-v2.soundcloud.com/charts?kind=top&genre=soundcloud:genres:all-music&client_id=02gUJC0hH2ct1EGOcYXQIzRFU91c72Ea&limit=20&offset=0&linked_partitioning=1") as _response:
             try:
+                response = await _response.text()
                 parsed = json.loads(response)
-            except (TypeError, ValueError):
+                parsed = json.loads(response)
+            except json.JSONDecodeError:
                 return
 
             for song in parsed.get("collection", []):
@@ -44,9 +47,37 @@ async def cache_soundcloud(redis, session):
 
     redis.setex("musicbot:chart:soundcloud", 86400, "1")
 
+
+async def cache_apple(redis, session):
+    if redis.exists("musicbot:chart:apple"):
+        return
+
+    with aiohttp.Timeout(30):
+        async with session.get("https://itunes.apple.com/us/rss/topsongs/limit=200/explicit=true/json") as _response:
+            try:
+                response = await _response.text()
+                parsed = json.loads(response)
+            except json.JSONDecodeError:
+                return
+
+            if "feed" not in parsed or "entry" not in parsed["feed"]:
+                return
+
+            for entry in parsed["feed"]["entry"]:
+                label = entry.get("title", {}).get("label", "")
+
+                if label == "":
+                    continue
+
+                redis.sadd("musicbot:chart", label)
+
+    redis.setex("musicbot:chart:apple", 86400, "1")
+
+
 async def get_random_top(bot, redis):
     await bot.loop.run_in_executor(thread_pool, functools.partial(cache_billboard, redis))
     await cache_soundcloud(redis, bot.aiosession)
+    await cache_apple(redis, bot.aiosession)
 
     return redis.srandmember("musicbot:chart")
 
