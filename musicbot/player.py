@@ -108,6 +108,7 @@ class MusicPlayer(EventEmitter):
             entry.meta["seek"] = time
             entry.meta["quiet"] = True
             self.playlist.entries.appendleft(entry)
+            self.bot.redis.lpush("musicbot:queue:" + self.voice_client.server.id, entry.to_json())
             self._kill_current_player()
 
     def skip(self):
