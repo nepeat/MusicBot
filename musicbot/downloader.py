@@ -1,12 +1,13 @@
 import functools
 import json
 import os
+import hashlib
 
 import redis
 import youtube_dl
 
 import asyncio
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from musicbot.connections import redis_pool
 
 ytdl_format_options = {
@@ -28,7 +29,7 @@ ytdl_format_options = {
 # Fuck your useless bugreports message that gets two link embeds and confuses users
 youtube_dl.utils.bug_reports_message = lambda: ''
 
-thread_pool = ProcessPoolExecutor(max_workers=2)
+thread_pool = ThreadPoolExecutor(max_workers=4)
 
 '''
     Alright, here's the problem.  To catch youtube-dl errors for their useful information, I have to
@@ -61,8 +62,16 @@ class Downloader:
 
         return ytdl
 
+    def hash_string(self, data):
+        if isinstance(data, str):
+            data = data.encode("utf8")
+
+        m = hashlib.md5()
+        m.update(data)
+        return m.hexdigest()
+
     def set_cache(self, url, data, **kwargs):
-        cachekey = "musicbot:cache:" + url
+        cachekey = "musicbot:cache:" + self.hash_string(url)
 
         # Do not cache searches on YouTube.
         if "url" in data and data["url"].startswith("ytsearch"):
@@ -74,7 +83,7 @@ class Downloader:
         self.redis.setex(cachekey, 60 * 60 * 24 * 7, json.dumps(data))
 
     def get_cache(self, url, **kwargs):
-        cachekey = "musicbot:cache:" + url
+        cachekey = "musicbot:cache:" + self.hash_string(url)
 
         # Don't hit the cache if we are downloading the video.
         if "download" in kwargs and kwargs["download"] is True:
@@ -83,11 +92,15 @@ class Downloader:
         if "process" in kwargs and kwargs["process"] is True:
             cachekey += ":processed"
 
-        if not self.redis.exists(cachekey):
-            return None
-
         try:
-            return json.loads(self.redis.get(cachekey))
+            _data = self.redis.get(cachekey)
+
+            if not _data:
+                return
+
+            data = json.loads(_data)
+            if data:
+                return data
         except json.JSONDecodeError:
             return None
 
