@@ -1,4 +1,4 @@
 #!/bin/sh
 
-apt-get update
-apt-get install redis-tools
+apk add --update redis zsh
+/bin/zsh
