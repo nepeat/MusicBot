@@ -65,7 +65,10 @@ class Playlist(EventEmitter):
 
             meta["seek"] = data["meta"].get("seek", 0)
 
-            asyncio.ensure_future(self.add_entry(data["url"], saved=True, **meta), loop=self.bot.loop)
+            if "http" in data["url"].lower():
+                asyncio.ensure_future(self.add_entry(data["url"], saved=True, **meta), loop=self.bot.loop)
+            else:
+                self.redis.lrem("musicbot:queue:" + self.serverid, 1, item)
 
     def shuffle(self, seed=None):
         if seed:
