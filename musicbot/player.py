@@ -207,6 +207,7 @@ class MusicPlayer(EventEmitter):
                 except Exception as e:
                     print("Failed to get entry.")
                     traceback.print_exc()
+                    self.bot.sentry.captureException()
                     # Retry playing the next entry in a sec.
                     self.loop.call_later(0.1, self.play)
                     return

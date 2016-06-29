@@ -117,10 +117,10 @@ class Playlist(EventEmitter):
                 # https://github.com/KeepSafe/aiohttp/issues/852
                 content_type = await get_header(self.bot.aiosession, info['url'], 'CONTENT-TYPE')
                 log.debug("Got content type %s", content_type)
-
             except asyncio.TimeoutError as e:
                 raise ExtractionError("This URL took too long to load.")
             except Exception as e:
+                self.bot.sentry.captureException()
                 lower_e = str(e).lower()
 
                 if "does not resolve" in lower_e or "no route to host" in lower_e or "invalid argument" in lower_e:
@@ -193,6 +193,7 @@ class Playlist(EventEmitter):
                     baditems += 1
                     # Once I know more about what's happening here I can add a proper message
                     traceback.print_exc()
+                    self.bot.sentry.captureException()
                     log.error(items)
                     log.error("Could not add item")
             else:

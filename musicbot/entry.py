@@ -59,9 +59,9 @@ class BasePlaylistEntry:
 
             try:
                 cb(future)
-
             except:
                 traceback.print_exc()
+                self.sentry.captureException()
 
     def __eq__(self, other):
         return self is other

@@ -115,6 +115,7 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
                 raise
             except Exception as e:
                 traceback.print_exc()
+                self.sentry.captureException()
                 raise CommandError("Error queuing playlist:\n%s" % e, expire_in=30)
 
         t0 = time.time()
@@ -204,6 +205,7 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
             reply_text += ' - estimated time until playing: %s'
         except:
             traceback.print_exc()
+            self.sentry.captureException()
             time_until = ''
 
         reply_text %= (btext, position, time_until)
@@ -237,6 +239,7 @@ async def play_playlist_async(self, player, channel, author, permissions, playli
 
         except Exception:
             traceback.print_exc()
+            self.sentry.captureException()
             raise CommandError('Error handling playlist %s queuing.' % playlist_url, expire_in=30)
 
     elif extractor_type.lower() in ['soundcloud:set', 'bandcamp:album']:
@@ -248,6 +251,8 @@ async def play_playlist_async(self, player, channel, author, permissions, playli
 
         except Exception:
             traceback.print_exc()
+            self.sentry.captureException()
+
             raise CommandError('Error handling playlist %s queuing.' % playlist_url, expire_in=30)
 
     songs_processed = len(entries_added)
