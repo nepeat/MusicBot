@@ -9,9 +9,10 @@ from itertools import islice
 import redis
 
 import asyncio
+from musicbot.commands.music import cmd_play
 from musicbot.connections import redis_pool
 from musicbot.entry import URLPlaylistEntry
-from musicbot.exceptions import ExtractionError, WrongEntryTypeError
+from musicbot.exceptions import ExtractionError, RetryPlay, WrongEntryTypeError
 from musicbot.lib.event_emitter import EventEmitter
 from musicbot.utils import get_header
 
@@ -117,7 +118,14 @@ class Playlist(EventEmitter):
                 content_type = await get_header(self.bot.aiosession, info['url'], 'CONTENT-TYPE')
                 log.debug("Got content type %s", content_type)
 
+            except asyncio.TimeoutError as e:
+                raise ExtractionError("This URL took too long to load.")
             except Exception as e:
+                lower_e = str(e).lower()
+
+                if "does not resolve" in lower_e or "no route to host" in lower_e or "invalid argument" in lower_e:
+                    raise RetryPlay()
+
                 log.warning("Failed to get content type for url %s (%s)", song_url, e)
                 content_type = None
 

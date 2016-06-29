@@ -4,7 +4,7 @@ import textwrap
 
 # Base class for exceptions
 class MusicbotException(Exception):
-    def __init__(self, message, expire_in=0):
+    def __init__(self, message="", expire_in=0):
         self._message = message
         self.expire_in = expire_in
 
@@ -26,6 +26,9 @@ class CommandError(MusicbotException):
 class ExtractionError(MusicbotException):
     pass
 
+# Something went wrong and the play should be retried with a ytsearch.
+class RetryPlay(MusicbotException):
+    pass
 
 # The no processing entry type failed and an entry was a playlist/vice versa
 class WrongEntryTypeError(ExtractionError):

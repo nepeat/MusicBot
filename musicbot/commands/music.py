@@ -11,7 +11,7 @@ import pytimeparse
 import asyncio
 from musicbot.commands import command
 from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
-from musicbot.exceptions import (CommandError, PermissionsError,
+from musicbot.exceptions import (CommandError, PermissionsError, RetryPlay,
                                  WrongEntryTypeError)
 from musicbot.structures import Response
 from musicbot.utils import sane_round_int
@@ -182,7 +182,9 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
 
         try:
             entry, position = await player.playlist.add_entry(song_url, channel=channel, author=author, prepend=prepend)
-
+        except RetryPlay:
+            new_url = song_url.replace("/", " ")
+            return await cmd_play(self, player, channel, author, permissions, leftover_args, new_url)
         except WrongEntryTypeError as e:
             if e.use_url == song_url:
                 log.info("[Warning] Determined incorrect entry type, but suggested url is the same.  Help.")
