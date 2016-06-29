@@ -155,13 +155,16 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
             if drop_count:
                 log.info("Dropped %s songs" % drop_count)
 
-        log.info("Processed {} songs in {} seconds at {:.2f}s/song, {:+.2g}/song from expected ({}s)".format(
-            listlen,
-            self._fixg(ttime),
-            ttime / listlen,
-            ttime / listlen - wait_per_song,
-            self._fixg(wait_per_song * num_songs))
-        )
+        try:
+            log.info("Processed {} songs in {} seconds at {:.2f}s/song, {:+.2g}/song from expected ({}s)".format(
+                listlen,
+                self._fixg(ttime),
+                ttime / listlen,
+                ttime / listlen - wait_per_song,
+                self._fixg(wait_per_song * num_songs))
+            )
+        except ZeroDivisionError:
+            pass
 
         await self.safe_delete_message(procmesg)
 
