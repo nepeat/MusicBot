@@ -4,9 +4,8 @@ import traceback
 from array import array
 from collections import deque
 
-from enum import Enum
-
 import asyncio
+from enum import Enum
 from musicbot.lib.event_emitter import EventEmitter
 
 
@@ -228,6 +227,7 @@ class MusicPlayer(EventEmitter):
                 self._current_player = self._monkeypatch_player(self.voice_client.create_ffmpeg_player(
                     entry.filename,
                     before_options=before_options,
+                    options="-vn -b:a 128k",
                     # Threadsafe call soon, b/c after will be called from the voice playback thread.
                     after=lambda: self.loop.call_soon_threadsafe(self._playback_finished)
                 ))

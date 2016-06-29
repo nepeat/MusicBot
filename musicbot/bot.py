@@ -5,15 +5,15 @@ import sys
 import traceback
 from collections import defaultdict
 
-import redis
-
 import aiohttp
-import asyncio
 import discord
 import raven
+import redis
 from discord.enums import ChannelType
 from discord.object import Object
 from discord.voice_client import VoiceClient
+
+import asyncio
 from musicbot import downloader, exceptions
 from musicbot.commands import all_commands
 from musicbot.connections import redis_pool
@@ -33,15 +33,12 @@ log = logging.getLogger(__name__)
 
 class MusicBot(discord.Client):
     def __init__(self):
-        super().__init__()
-
         self.sentry = raven.Client(dsn=os.environ.get("SENTRY_DSN", None))
 
         self.players = {}
         self.the_voice_clients = {}
         self.voice_client_connect_lock = asyncio.Lock()
         self.voice_client_move_lock = asyncio.Lock()
-        self.aiosession = aiohttp.ClientSession(loop=self.loop)
 
         load_config(self)
 
@@ -52,11 +49,14 @@ class MusicBot(discord.Client):
 
         self.exit_signal = None
 
-        self.http.user_agent += ' MusicBot/MODIFIED'
-
         # TODO: Do these properly
         ssd_defaults = {'last_np_msg': None}
         self.server_specific_data = defaultdict(lambda: dict(ssd_defaults))
+
+        super().__init__()
+        self.aiosession = aiohttp.ClientSession(loop=self.loop)
+        self.http.user_agent += ' MusicBot/MODIFIED'
+
 
     @staticmethod
     def _fixg(x, dp=2):
@@ -439,7 +439,6 @@ class MusicBot(discord.Client):
             [log.info(' - ' + s.name) for s in self.servers]
         else:
             log.info("Owner unavailable, bot is not on any servers.")
-            # if bot: post help link, else post something about invite links
 
         if self.config.bound_channels:
             chlist = set(self.get_channel(i) for i in self.config.bound_channels if i)

@@ -6,8 +6,9 @@ from datetime import timedelta
 from io import BytesIO
 from textwrap import dedent
 
-import asyncio
 import pytimeparse
+
+import asyncio
 from musicbot.commands import command
 from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
 from musicbot.exceptions import (CommandError, PermissionsError,
@@ -33,7 +34,7 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
 
     if permissions.max_songs and player.playlist.count_for_user(author) >= permissions.max_songs:
         raise PermissionsError(
-            "You have reached your playlist item limit (%s)" % permissions.max_songs, expire_in=30
+            "You have reached your enqueued song limit (%s)" % permissions.max_songs, expire_in=30
         )
 
     if leftover_args:
@@ -132,7 +133,6 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
                 ', ETA: {} seconds'.format(self._fixg(
                     num_songs * wait_per_song)) if num_songs >= 10 else '.'))
 
-
         # TODO: I can create an event emitter object instead, add event functions, and every play list might be asyncified
         #       Also have a "verify_entry" hook with the entry as an arg and returns the entry if its ok
 
@@ -225,6 +225,7 @@ async def play_playlist_async(self, player, channel, author, permissions, playli
     busymsg = await self.safe_send_message(
         channel, "Processing %s songs..." % num_songs)  # TODO: From playlist_title
 
+    entries_added = 0
     if extractor_type == 'youtube:playlist':
         try:
             entries_added = await player.playlist.async_process_youtube_playlist(
@@ -320,7 +321,7 @@ async def cmd_search(self, player, channel, author, permissions, leftover_args):
 
     if permissions.max_songs and player.playlist.count_for_user(author) > permissions.max_songs:
         raise PermissionsError(
-            "You have reached your playlist item limit (%s)" % permissions.max_songs,
+            "You have reached your enqueued song limit (%s)" % permissions.max_songs,
             expire_in=30
         )
 
@@ -541,19 +542,18 @@ async def cmd_skip(self, player, channel, author, message, permissions, voice_ch
     if not player.current_entry:
         if player.playlist.peek():
             if player.playlist.peek()._is_downloading:
-                log.info(player.playlist.peek()._waiting_futures[0].__dict__)
                 return Response("The next song (%s) is downloading, please wait." % player.playlist.peek().title)
 
             elif player.playlist.peek().is_downloaded:
                 log.info("The next song will be played shortly.  Please wait.")
             else:
                 log.info("Something odd is happening.  "
-                      "You might want to restart the bot if it doesn't start working.")
+                         "You might want to restart the bot if it doesn't start working.")
         else:
             log.info("Something strange is happening.  "
-                  "You might want to restart the bot if it doesn't start working.")
+                     "You might want to restart the bot if it doesn't start working.")
 
-    if permissions.instaskip:
+    if permissions.instaskip or author == player.current_entry.meta.get("author", None):
         player.skip()
         await self._manual_delete_check(message)
         return

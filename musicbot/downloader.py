@@ -1,7 +1,7 @@
 import functools
+import hashlib
 import json
 import os
-import hashlib
 
 import redis
 import youtube_dl

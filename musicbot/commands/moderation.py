@@ -3,6 +3,7 @@ from functools import wraps
 import aiohttp
 from discord import Game
 from discord.ext.commands.bot import _get_variable
+
 from musicbot.commands import command
 from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
                                  TerminateSignal)
