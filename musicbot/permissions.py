@@ -33,7 +33,6 @@ class Permissions:
             try:
                 shutil.copy('config/example_permissions.ini', config_file)
                 self.config.read(config_file, encoding='utf-8')
-
             except Exception as e:
                 traceback.print_exc()
                 raise RuntimeError("Unable to copy config/example_permissions.ini to %s: %s" % (config_file, e))

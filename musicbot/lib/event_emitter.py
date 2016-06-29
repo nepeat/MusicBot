@@ -20,7 +20,6 @@ class EventEmitter:
                     asyncio.ensure_future(cb(*args, **kwargs), loop=self.loop)
                 else:
                     cb(*args, **kwargs)
-
             except:
                 traceback.print_exc()
 
