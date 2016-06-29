@@ -130,11 +130,11 @@ class Playlist(EventEmitter):
                     log.warning("Questionable content type \"%s\" for url %s", content_type, song_url)
 
         entry = URLPlaylistEntry(
-            self,
-            song_url,
-            info.get('title', 'Untitled'),
-            info.get('duration', 0) or 0,
-            self.downloader.ytdl.prepare_filename(info),
+            playlist=self,
+            url=song_url,
+            title=info.get('title', 'Untitled'),
+            duration=info.get('duration', 0) or 0,
+            expected_filename=self.downloader.ytdl.prepare_filename(info),
             **meta
         )
         self._add_entry(entry, saved, prepend)
@@ -171,11 +171,11 @@ class Playlist(EventEmitter):
             if items:
                 try:
                     entry = URLPlaylistEntry(
-                        self,
-                        items[url_field],
-                        items.get('title', 'Untitled'),
-                        items.get('duration', 0) or 0,
-                        self.downloader.ytdl.prepare_filename(items),
+                        playlist=self,
+                        url=items[url_field],
+                        title=items.get('title', 'Untitled'),
+                        duration=items.get('duration', 0) or 0,
+                        expected_filename=self.downloader.ytdl.prepare_filename(items),
                         **meta
                     )
 
