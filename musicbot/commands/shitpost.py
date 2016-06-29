@@ -1,14 +1,14 @@
 import functools
-import billboard
-import aiohttp
 import json
 
+import aiohttp
+import billboard
+
+from concurrent.futures import ThreadPoolExecutor
 from musicbot.commands import command
 from musicbot.commands.music import cmd_play
 from musicbot.structures import Response
 from musicbot.utils import weighted_choice
-
-from concurrent.futures import ThreadPoolExecutor
 
 thread_pool = ThreadPoolExecutor(max_workers=2)
 
@@ -90,6 +90,9 @@ async def cmd_surprise(self, player, channel, author, permissions, redis, mode="
     else:
         urls = redis.hgetall("musicbot:played")
         url = weighted_choice(urls)
+
+    if mode == "prepend":
+        url = "prepend:" + url
 
     if url:
         return await cmd_play(self, player, channel, author, permissions, None, url)
