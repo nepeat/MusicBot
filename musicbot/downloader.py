@@ -80,7 +80,10 @@ class Downloader:
         if "process" in kwargs and kwargs["process"] is True:
             cachekey += ":processed"
 
-        self.redis.setex(cachekey, 60 * 60 * 24 * 7, json.dumps(data))
+        try:
+            self.redis.setex(cachekey, 60 * 60 * 24 * 7, json.dumps(data))
+        except TypeError:
+            pass
 
     def get_cache(self, url, **kwargs):
         cachekey = "musicbot:cache:" + self.hash_string(url)
