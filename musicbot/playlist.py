@@ -60,6 +60,10 @@ class Playlist(EventEmitter):
                     log.error(data)
                     continue
 
+            # Sanity check
+            if "url" not in data:
+                continue
+
             if "channel" in data["meta"] and "author" in data["meta"]:
                 meta["channel"] = self.bot.get_channel(data["meta"]["channel"])
                 meta["author"] = meta["channel"].server.get_member(data["meta"]["author"])
@@ -115,16 +119,20 @@ class Playlist(EventEmitter):
                 # unfortunately this is literally broken
                 # https://github.com/KeepSafe/aiohttp/issues/758
                 # https://github.com/KeepSafe/aiohttp/issues/852
-                content_type = await get_header(self.bot.aiosession, info['url'], 'CONTENT-TYPE')
+                url = info.get('url', info.get('webpage_url', None))
+                if url:
+                    content_type = await get_header(self.bot.aiosession, url, 'CONTENT-TYPE')
+                else:
+                    raise ExtractionError("Something weird happened with fetching the URL for this song.")
                 log.debug("Got content type %s", content_type)
             except asyncio.TimeoutError as e:
                 raise ExtractionError("This URL took too long to load.")
+            except OSError:
+                raise RetryPlay()
+            except ValueError as e:
+                raise ExtractionError(str(e))
             except Exception as e:
                 self.bot.sentry.captureException()
-                lower_e = str(e).lower()
-
-                if "does not resolve" in lower_e or "no route to host" in lower_e or "invalid argument" in lower_e:
-                    raise RetryPlay()
 
                 log.warning("Failed to get content type for url %s (%s)", song_url, e)
                 content_type = None
