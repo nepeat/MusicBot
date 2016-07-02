@@ -25,7 +25,7 @@ def md5sum(filename, limit=0):
     return fhash.hexdigest()[-limit:]
 
 
-def weighted_choice(items):
+def weighted_choice(items, diminish=None):
     if isinstance(items, dict):
         choices, weights = zip(*items.items())
     else:
@@ -33,6 +33,10 @@ def weighted_choice(items):
 
     # Ensure that the weights are integrers if they are bytes or strings.
     weights = [int(x) for x in weights]
+
+    # Divide the weights in half if they are over the diminish value.
+    if diminish:
+        weights = [x / 2 for x in weights if x > diminish]
 
     cumdist = list(itertools.accumulate(weights))
     choice = random.random() * cumdist[-1]

@@ -89,7 +89,7 @@ async def cmd_surprise(self, player, channel, author, permissions, redis, mode="
         url = await get_random_top(self, redis)
     else:
         urls = redis.hgetall("musicbot:played")
-        url = weighted_choice(urls)
+        url = weighted_choice(urls, 100)
 
     if mode == "prepend":
         url = "prepend:" + url
