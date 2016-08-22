@@ -6,9 +6,8 @@ import traceback
 from collections import deque
 from itertools import islice
 
-import redis
-
 import asyncio
+import redis
 from musicbot.commands.music import cmd_play
 from musicbot.connections import redis_pool
 from musicbot.entry import URLPlaylistEntry

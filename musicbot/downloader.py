@@ -3,10 +3,9 @@ import hashlib
 import json
 import os
 
+import asyncio
 import redis
 import youtube_dl
-
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from musicbot.connections import redis_pool
 

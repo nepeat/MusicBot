@@ -3,7 +3,6 @@ from functools import wraps
 import aiohttp
 from discord import Game
 from discord.ext.commands.bot import _get_variable
-
 from musicbot.commands import command
 from musicbot.exceptions import (CommandError, PermissionsError, RestartSignal,
                                  TerminateSignal)
@@ -78,7 +77,7 @@ async def cmd_setnick(self, server, channel, leftover_args, nick):
     Changes the bot's nickname.
     """
 
-    if not channel.permissions_for(server.me).change_nicknames:
+    if not channel.permissions_for(server.me).change_nickname:
         raise CommandError("Unable to change nickname: no permission.")
 
     nick = ' '.join([nick, *leftover_args])

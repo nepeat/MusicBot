@@ -1,11 +1,15 @@
 import audioop
 import os
+import subprocess
+import sys
 import traceback
 from array import array
 from collections import deque
+from threading import Thread
 
 import asyncio
 from enum import Enum
+from musicbot.exceptions import FFmpegError, FFmpegWarning
 from musicbot.lib.event_emitter import EventEmitter
 
 
@@ -45,9 +49,6 @@ class PatchedBuff:
 
             return frame_array.tobytes()
 
-    def _avg(self, i):
-        return sum(i) / len(i)
-
 
 class MusicPlayerState(Enum):
     STOPPED = 0  # When the player isn't playing anything
@@ -68,12 +69,13 @@ class MusicPlayer(EventEmitter):
         self.voice_client = voice_client
         self.playlist = playlist
         self.playlist.on('entry-added', self.on_entry_added)
-        self._volume = bot.config.default_volume
+        self.state = MusicPlayerState.STOPPED
 
+        self._volume = bot.config.default_volume
         self._play_lock = asyncio.Lock()
         self._current_player = None
         self._current_entry = None
-        self.state = MusicPlayerState.STOPPED
+        self._stderr_future = None
 
         self.loop.create_task(self.websocket_check())
 
@@ -168,6 +170,9 @@ class MusicPlayer(EventEmitter):
 
         self._current_entry = None
 
+        if self._stderr_future.done() and self._stderr_future.exception():
+            self.emit('error', entry=entry, ex=self._stderr_future.exception())
+
         if not self.is_stopped and not self.is_dead:
             self.play(_continue=True)
 
@@ -229,6 +234,7 @@ class MusicPlayer(EventEmitter):
                     entry.filename,
                     before_options=before_options,
                     options="-vn -b:a 128k",
+                    stderr=subprocess.PIPE,
                     # Threadsafe call soon, b/c after will be called from the voice playback thread.
                     after=lambda: self.loop.call_soon_threadsafe(self._playback_finished)
                 ))
@@ -238,8 +244,17 @@ class MusicPlayer(EventEmitter):
                 # I need to add ytdl hooks
                 self.state = MusicPlayerState.PLAYING
                 self._current_entry = entry
+                self._stderr_future = asyncio.Future()
 
+                stderr_thread = Thread(
+                    target=filter_stderr,
+                    args=(self._current_player.process, self._stderr_future),
+                    name="{} stderr reader".format(self._current_player.name)
+                )
+
+                stderr_thread.start()
                 self._current_player.start()
+
                 if not entry.meta.get("quiet", False):
                     self.emit('play', player=self, entry=entry)
 
@@ -297,6 +312,57 @@ class MusicPlayer(EventEmitter):
         #       192k AKA sampleRate * (bitDepth / 8) * channelCount
         #       Change frame_count to bytes_read in the PatchedBuff
 
+def filter_stderr(popen: subprocess.Popen, future: asyncio.Future):
+    last_ex = None
+
+    while True:
+        data = popen.stderr.readline()
+        if data:
+            # print("FFmpeg says:", data, flush=True)
+            try:
+                if check_stderr(data):
+                    sys.stderr.buffer.write(data)
+                    sys.stderr.buffer.flush()
+            except FFmpegError as e:
+                print("Error from FFmpeg:", e)
+                last_ex = e
+            except FFmpegWarning:
+                pass
+        else:
+            break
+
+    if last_ex:
+        future.set_exception(last_ex)
+    else:
+        future.set_result(True)
+
+def check_stderr(data: bytes):
+    try:
+        data = data.decode('utf8')
+    except:
+        return True
+
+    # TODO: Regex
+    warnings = [
+        "Header missing",
+        "Estimating duration from birate, this may be inaccurate",
+        "Using AVStream.codec to pass codec parameters to muxers is deprecated, use AVStream.codecpar instead.",
+        "Application provided invalid, non monotonically increasing dts to muxer in stream",
+        "Last message repeated",
+        "Failed to send close message",
+        "decode_band_types: Input buffer exhausted before END element found",
+    ]
+    errors = [
+        "Invalid data found when processing input",
+    ]
+
+    if any(msg in data for msg in warnings):
+        raise FFmpegWarning(data)
+
+    if any(msg in data for msg in errors):
+        raise FFmpegError(data)
+
+    return True
 
 # if redistributing ffmpeg is an issue, it can be downloaded from here:
 #  - http://ffmpeg.zeranoe.com/builds/win32/static/ffmpeg-latest-win32-static.7z

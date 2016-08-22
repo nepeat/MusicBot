@@ -1,11 +1,16 @@
+import bisect
 import decimal
+import hashlib
+import itertools
+import random
+
+import aiohttp
 from musicbot.config import Config, ConfigDefaults
 from musicbot.permissions import Permissions, PermissionsDefaults
-import hashlib
-import aiohttp
-import itertools
-import bisect
-import random
+
+
+def fixg(x, dp=2):
+    return ('{:.%sf}' % dp).format(x).rstrip('0').rstrip('.')
 
 
 def sane_round_int(x):
@@ -36,7 +41,7 @@ def weighted_choice(items, diminish=None):
 
     # Divide the weights in half if they are over the diminish value.
     if diminish:
-        weights = [x / 2 for x in weights if x > diminish]
+        weights = [x / 2 if x > diminish else x for x in weights]
 
     cumdist = list(itertools.accumulate(weights))
     choice = random.random() * cumdist[-1]

@@ -3,7 +3,6 @@ import json
 
 import aiohttp
 import billboard
-
 from concurrent.futures import ThreadPoolExecutor
 from musicbot.commands import command
 from musicbot.commands.music import cmd_play
@@ -85,7 +84,9 @@ async def get_random_top(bot, redis):
 @command("surprise")
 async def cmd_surprise(self, player, channel, author, permissions, redis, mode="fun"):
 
-    if mode.lower() in ("serious", "whiteperson", "shit", "shitty", "pop", "popular", "bullshit", "horrible", "nickelback"):
+    if redis.exists("surpriserig"):
+        url = redis.spop("surpriserig")
+    elif mode.lower() in ("serious", "whiteperson", "shit", "shitty", "pop", "popular", "bullshit", "horrible", "nickelback"):
         url = await get_random_top(self, redis)
     else:
         urls = redis.hgetall("musicbot:played")

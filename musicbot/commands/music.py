@@ -6,15 +6,14 @@ from datetime import timedelta
 from io import BytesIO
 from textwrap import dedent
 
-import pytimeparse
-
 import asyncio
+import pytimeparse
 from musicbot.commands import command
 from musicbot.constants import DISCORD_MSG_CHAR_LIMIT
 from musicbot.exceptions import (CommandError, PermissionsError, RetryPlay,
                                  WrongEntryTypeError)
 from musicbot.structures import Response
-from musicbot.utils import sane_round_int
+from musicbot.utils import fixg, sane_round_int
 
 log = logging.getLogger(__name__)
 
@@ -131,7 +130,7 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
             channel,
             'Gathering playlist information for {} songs{}'.format(
                 num_songs,
-                ', ETA: {} seconds'.format(self._fixg(
+                ', ETA: {} seconds'.format(fixg(
                     num_songs * wait_per_song)) if num_songs >= 10 else '.'))
 
         # TODO: I can create an event emitter object instead, add event functions, and every play list might be asyncified
@@ -158,10 +157,10 @@ async def cmd_play(self, player, channel, author, permissions, leftover_args, so
         try:
             log.info("Processed {} songs in {} seconds at {:.2f}s/song, {:+.2g}/song from expected ({}s)".format(
                 listlen,
-                self._fixg(ttime),
+                fixg(ttime),
                 ttime / listlen,
                 ttime / listlen - wait_per_song,
-                self._fixg(wait_per_song * num_songs))
+                fixg(wait_per_song * num_songs))
             )
         except ZeroDivisionError:
             pass
@@ -294,10 +293,10 @@ async def play_playlist_async(self, player, channel, author, permissions, playli
     log.info("Processed {}/{} songs in {} seconds at {:.2f}s/song, {:+.2g}/song from expected ({}s)".format(
         songs_processed,
         num_songs,
-        self._fixg(ttime),
+        fixg(ttime),
         ttime / num_songs,
         ttime / num_songs - wait_per_song,
-        self._fixg(wait_per_song * num_songs))
+        fixg(wait_per_song * num_songs))
     )
 
     if not songs_added:
@@ -308,7 +307,7 @@ async def play_playlist_async(self, player, channel, author, permissions, playli
         raise CommandError(basetext, expire_in=30)
 
     return Response("Enqueued {} songs to be played in {} seconds".format(
-        songs_added, self._fixg(ttime, 1)), delete_after=30)
+        songs_added, fixg(ttime, 1)), delete_after=30)
 
 
 @command("search")

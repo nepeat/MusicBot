@@ -6,21 +6,20 @@ import traceback
 from collections import defaultdict
 
 import aiohttp
+import asyncio
 import discord
 import raven
 import redis
 from discord.enums import ChannelType
 from discord.object import Object
 from discord.voice_client import VoiceClient
-
-import asyncio
 from musicbot import downloader, exceptions
 from musicbot.commands import all_commands
 from musicbot.connections import redis_pool
 from musicbot.player import MusicPlayer
 from musicbot.playlist import Playlist
 from musicbot.structures import Response, SkipState
-from musicbot.utils import load_config, migrate_redis
+from musicbot.utils import fixg, load_config, migrate_redis
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -57,10 +56,18 @@ class MusicBot(discord.Client):
         self.aiosession = aiohttp.ClientSession(loop=self.loop)
         self.http.user_agent += ' MusicBot/MODIFIED'
 
+    def __del__(self):
+        try:
+            if not self.http.session.closed:
+                self.http.session.close()
+        except:
+            pass
 
-    @staticmethod
-    def _fixg(x, dp=2):
-        return ('{:.%sf}' % dp).format(x).rstrip('0').rstrip('.')
+        try:
+            if not self.aiosession.closed:
+                self.aiosession.close()
+        except:
+            pass
 
     def _get_owner(self, voice=False):
         if voice:
@@ -266,7 +273,8 @@ class MusicBot(discord.Client):
 
             playlist = Playlist(self, channel.server.id)
             player = MusicPlayer(self, voice_client, playlist) \
-                .on('play', self.on_player_play)
+                .on('play', self.on_player_play) \
+                .on('error', self.on_player_error)
 
             player.skip_state = SkipState()
             self.players[server.id] = player
@@ -477,7 +485,7 @@ class MusicBot(discord.Client):
         log.info("  Command prefix: " + self.config.command_prefix)
         log.info("  Default volume: %s%%" % int(self.config.default_volume * 100))
         log.info("  Skip threshold: %s votes or %s%%" % (
-            self.config.skips_required, self._fixg(self.config.skip_ratio_required * 100)))
+            self.config.skips_required, fixg(self.config.skip_ratio_required * 100)))
         log.info("  Now Playing @mentions: " + ['Disabled', 'Enabled'][self.config.now_playing_mentions])
         log.info("  Delete Messages: " + ['Disabled', 'Enabled'][self.config.delete_messages])
         if self.config.delete_messages:
