@@ -491,7 +491,7 @@ class MusicBot(discord.Client):
         command, *args = message_content.split()  # Uh, doesn't this break prefixes with spaces in them (it doesn't, config parser already breaks them)
         command = command[len(self.config.command_prefix):].lower().strip()
 
-        handler = all_commands.get(command, None)
+        handler = all_commands.get(command, None)["f"]
         if not handler:
             return
 

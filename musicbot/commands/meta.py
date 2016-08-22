@@ -36,7 +36,7 @@ async def cmd_help(self, command=None):
     """
 
     if command:
-        cmd = all_commands.get(command, None)
+        cmd = all_commands.get(command, None)["f"]
 
         if not cmd:
             return Response("No such command", delete_after=10)
