@@ -1,7 +1,5 @@
 FROM alpine:edge
 
-MAINTAINER Sidesplitter, https://github.com/SexualRhinoceros/MusicBot
-
 # Requirements
 COPY requirements.txt /app/requirements.txt
 RUN apk add --no-cache build-base libintl python3 python3-dev ffmpeg opus opus-dev libffi libffi-dev rtmpdump ca-certificates libsodium libsodium-dev pkgconf && \

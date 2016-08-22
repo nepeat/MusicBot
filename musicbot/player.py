@@ -6,11 +6,13 @@ import traceback
 from array import array
 from collections import deque
 from threading import Thread
-
+import logging
 import asyncio
 from enum import Enum
 from musicbot.exceptions import FFmpegError, FFmpegWarning
 from musicbot.lib.event_emitter import EventEmitter
+
+log = logging.getLogger(__name__)
 
 
 class PatchedBuff:
@@ -271,6 +273,8 @@ class MusicPlayer(EventEmitter):
             self._current_player._connected.set()
 
     async def websocket_check(self):
+        log.debug("Starting websocket check for {}".format(self.voice_client.channel.server))
+
         while not self.is_dead:
             try:
                 self.voice_client.ws.ensure_open()
