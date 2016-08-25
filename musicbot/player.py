@@ -1,4 +1,5 @@
 import audioop
+import logging
 import os
 import subprocess
 import sys
@@ -6,12 +7,12 @@ import traceback
 from array import array
 from collections import deque
 from threading import Thread
-import logging
+
 import asyncio
+from discord.http import _func_
 from enum import Enum
 from musicbot.exceptions import FFmpegError, FFmpegWarning
 from musicbot.lib.event_emitter import EventEmitter
-from discord.http import _func_
 from websockets.exceptions import InvalidState
 
 log = logging.getLogger(__name__)

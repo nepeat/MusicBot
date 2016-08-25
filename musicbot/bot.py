@@ -10,8 +10,8 @@ import asyncio
 import discord
 import raven
 import redis
-from discord.http import _func_
 from discord.enums import ChannelType
+from discord.http import _func_
 from discord.voice_client import VoiceClient
 from musicbot import downloader, exceptions
 from musicbot.commands import all_commands
